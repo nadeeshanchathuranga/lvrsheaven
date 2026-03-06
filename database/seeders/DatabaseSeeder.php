@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         'name' => 'admin',
         'email' => 'admin@admin.com',
         'role_type' => 'Admin',
-        'password' => Hash::make('admin@shadcake2025'),
+        'password' => Hash::make('admin@lvrsheaven2025'),
     ]);
 }
 
@@ -29,7 +29,7 @@ if (!\App\Models\User::where('email', 'manager@manager.com')->exists()) {
         'name' => 'manager',
         'email' => 'manager@manager.com',
         'role_type' => 'Manager',
-        'password' => Hash::make('manager@shadcake2025'),
+        'password' => Hash::make('manager@lvrsheaven2025'),
     ]);
 }
 
@@ -39,10 +39,19 @@ if (!\App\Models\User::where('email', 'manager@manager.com')->exists()) {
 
 if (!\App\Models\User::where('email', 't1@cashier.com')->exists()) {
     \App\Models\User::factory()->create([
-        'name' => 'cashier',
+        'name' => 'cashier1',
         'email' => 't1@cashier.com',
         'role_type' => 'Cashier',
-        'password' => Hash::make('cashier@shadcake2025'),
+        'password' => Hash::make('cashier1@lvrsheaven2025'),
+    ]);
+}
+
+if (!\App\Models\User::where('email', 't2@cashier.com')->exists()) {
+    \App\Models\User::factory()->create([
+        'name' => 'cashier2',
+        'email' => 't2@cashier.com',
+        'role_type' => 'Cashier',
+        'password' => Hash::make('cashier2@lvrsheaven2025'),
     ]);
 }
 

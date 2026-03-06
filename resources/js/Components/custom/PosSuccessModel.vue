@@ -195,7 +195,7 @@ const productRows = props.products
           @media print {
               body {
                   margin: 0;
-                  padding: 0;
+                  padding: 0 20mm;
                   -webkit-print-color-adjust: exact;
               }
           }
@@ -204,7 +204,7 @@ const productRows = props.products
               font-size: 12px;
               font-family: 'Arial', sans-serif;
               margin: 0;
-              padding: 10px;
+              padding: 10px 5mm;
               color: #000;
           }
           .header {
