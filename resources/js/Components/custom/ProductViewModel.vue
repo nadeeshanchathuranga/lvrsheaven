@@ -246,7 +246,7 @@ const formattedDate = computed(() =>
     return;
   }
 
-  // Exact 30mm × 18mm sticker size - 3 per row guaranteed
+  // Exact 30mm × 18mm sticker size - 1 per row guaranteed
   const MM_TO_PX = 3.78;
   const LABEL_W_MM = 30;
   const LABEL_H_MM = 18;
@@ -256,7 +256,7 @@ const formattedDate = computed(() =>
   const labelsHtml = Array.from({ length: count }).map((_, idx) => `
     <div class="barcode-label">
       <div class="product-name">${selectedProduct?.name || 'N/A'}</div>
-       
+
       <div class="barcode-svg"><svg id="barcode${idx + 1}"></svg></div>
       <div class="bottom-info">${(selectedProduct?.selling_price ?? 'N/A')} LKR</div>
     </div>
@@ -280,7 +280,7 @@ const formattedDate = computed(() =>
         }
 
         .barcode-container {
-          width: 96mm; /* Exactly 3 stickers × 30mm + 3mm gaps */
+          width: 36mm; /* Exactly 1 sticker × 30mm + padding */
           margin: 0 auto;
           padding: 3mm;
           display: flex;
