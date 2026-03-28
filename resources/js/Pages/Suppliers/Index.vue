@@ -121,12 +121,6 @@
                 </td>
                 <td class="p-4 text-center border-t border-gray-200">
                   <div class="inline-flex items-center space-x-2">
-                    <a
-                      v-if="supplier.supplier_code"
-                      :href="`/suppliers/${supplier.id}/barcode`"
-                      target="_blank"
-                      class="px-3 py-1 bg-teal-500 text-white rounded-lg text-xs hover:bg-teal-600 transition"
-                    >Barcode</a>
                     <Link :href="`/grn?supplier_id=${supplier.id}`" class="px-3 py-1 bg-green-500 text-white rounded-lg text-xs hover:bg-green-600 transition">GRNs</Link>
                     <button
                       :class="HasRole([`Admin`]) ? `px-3 py-1 bg-blue-500 text-white rounded-lg text-xs` : `px-3 py-1 bg-blue-300 text-white rounded-lg text-xs cursor-not-allowed`"

@@ -39,11 +39,14 @@
   <div class="grid grid-cols-2 gap-6 mt-6 text-left">
     <!-- Supplier Code -->
     <div class="col-span-2">
-      <label class="block text-sm font-medium text-gray-300">Supplier Code <span class="text-gray-400 text-xs">(leave blank to auto-generate)</span>:</label>
+      <label class="block text-sm font-medium text-gray-300">Supplier Code <span class="text-gray-400 text-xs">(optional, up to 4 digits)</span>:</label>
       <input
         v-model="form.supplier_code"
         type="text"
-        placeholder="e.g. SUP-20260328-0001"
+        inputmode="numeric"
+        maxlength="4"
+        placeholder="e.g. 1234"
+        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)"
         class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
       />
       <span v-if="form.errors.supplier_code" class="mt-1 text-red-500 text-sm">{{ form.errors.supplier_code }}</span>
@@ -75,7 +78,6 @@
         v-model="form.contact"
         type="text"
         id="contact"
-        required
          oninput="this.value = this.value.replace(/[^0-9]/g, '');"
         class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
       />
@@ -93,7 +95,6 @@
         v-model="form.email"
         type="email"
         id="email"
-        required
         class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
       />
       <span v-if="form.errors.email" class="mt-4 text-red-500">
@@ -110,7 +111,6 @@
         v-model="form.address"
         type="text"
         id="address"
-        required
         class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
       />
       <span v-if="form.errors.address" class="mt-4 text-red-500">

@@ -10,16 +10,9 @@ use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
-    public function showBarcode($id)
-    {
-        $product = Product::findOrFail($id);
-
-        return view('barcode', compact('product'));
-    }
-
     public function barcodeStickerPrint(Request $request, $id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('supplier')->findOrFail($id);
         $qty     = max(1, (int) $request->query('qty', 1));
 
         return view('barcode-sticker', compact('product', 'qty'));

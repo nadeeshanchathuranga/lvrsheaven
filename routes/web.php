@@ -75,7 +75,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('suppliers', SupplierController::class);
     Route::post('suppliers/{supplier}', [SupplierController::class, 'update']);
     Route::post('suppliers-quick', [SupplierController::class, 'quickStore'])->name('suppliers.quick');
-    Route::get('suppliers/{supplier}/barcode', [SupplierController::class, 'barcode'])->name('suppliers.barcode');
     Route::post('products/{product}', [ProductController::class, 'update']);
     Route::post('products-variant', [ProductController::class, 'productVariantStore'])->name('productVariant');
 
@@ -147,5 +146,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
-Route::get('/barcode/{id}', [CategoryController::class, 'showBarcode']);
 Route::get('/barcode-sticker/{id}', [CategoryController::class, 'barcodeStickerPrint'])->name('barcode.sticker')->middleware('auth');

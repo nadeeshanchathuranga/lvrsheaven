@@ -79,18 +79,24 @@
       width:  30mm;
       height: 16mm;
       overflow: hidden;
+      position: relative;        /* anchor for the absolute supplier strip */
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 0.5mm 0.8mm;
-      border: 0.3mm dashed #bbb;   /* cut-guide on screen */
+      border: 0.3mm dashed #bbb; /* cut-guide on screen */
       background: #fff;
+    }
+
+    /* when a supplier strip is present, shift content left to avoid overlap */
+    .sticker.has-supplier {
+      padding-right: 5mm;
     }
 
     @media print {
       .sticker {
-        border: none;          /* no visible border on the actual sticker */
+        border: none;
         page-break-inside: avoid;
         break-inside: avoid;
       }
@@ -128,6 +134,34 @@
       margin-top: 0.1mm;
       letter-spacing: 0.3pt;
     }
+
+    /* ─── Right supplier code strip (absolute overlay) ─── */
+    .sticker-supplier {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 4.5mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg); /* reads bottom-to-top */
+      font-size: 3.5pt;
+      font-weight: 600;
+      color: #555;
+      letter-spacing: 0.4pt;
+      border-left: 0.2mm solid #ddd;
+      overflow: hidden;
+      white-space: nowrap;
+      background: #fff;
+    }
+
+    @media print {
+      .sticker-supplier {
+        border-left: 0.2mm solid #ccc;
+      }
+    }
   </style>
 </head>
 <body>
@@ -141,10 +175,13 @@
   </div>
 
   @php
-    $barcode = $product->barcode ?: ($product->code ?: (string)$product->id);
-    $name    = $product->name ?? '';
-    $price   = number_format($product->selling_price ?? 0, 2);
-    $rows    = ceil($qty / 3);
+    $barcode      = $product->barcode ?: ($product->code ?: (string)$product->id);
+    $name         = $product->name ?? '';
+    $price        = number_format($product->selling_price ?? 0, 2);
+    $rows         = ceil($qty / 3);
+    $supplierCode = (isset($product->supplier->supplier_code) && trim($product->supplier->supplier_code) !== '') 
+                    ? trim($product->supplier->supplier_code) 
+                    : null;
   @endphp
 
   {{-- CSS variable to compensate transform scale height --}}
@@ -156,11 +193,13 @@
   <div class="sheet-wrap">
     <div class="sticker-grid">
       @for ($i = 0; $i < $qty; $i++)
-      <div class="sticker">
+      <div class="sticker {{ $supplierCode ? 'has-supplier' : '' }}">
         <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
         <svg id="bc-{{ $i }}" data-barcode="{{ $barcode }}"></svg>
         <div class="sticker-price">Rs. {{ $price }}</div>
-        <div class="sticker-code">{{ $barcode }}</div>
+        @if($supplierCode)
+        <div class="sticker-supplier">{{ $supplierCode }}</div>
+        @endif
       </div>
       @endfor
     </div>
@@ -181,178 +220,6 @@
       } catch(e) {
         el.insertAdjacentHTML('afterend', '<span style="font-size:4pt;color:red">ERR</span>');
         el.remove();
-      }
-    });
-  </script>
-</body>
-</html>
-
-    /* ── Print page setup ───────────────────────── */
-    @page {
-      /* 3 stickers wide: 3 × 30mm = 90mm, auto height feeds the roll */
-      size: 90mm auto;
-      margin: 0;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: #f5f5f5;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    /* ── Screen-only controls ───────────────────── */
-    .screen-bar {
-      background: #1e293b;
-      color: #fff;
-      padding: 12px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .screen-bar h1 { font-size: 15px; font-weight: 700; }
-    .screen-bar span { font-size: 13px; color: #94a3b8; }
-    .btn-print {
-      background: #16a34a;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 22px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 0.5px;
-    }
-    .btn-print:hover { background: #15803d; }
-
-    @media print {
-      .screen-bar { display: none; }
-      body { background: #fff; }
-    }
-
-    /* ── Sticker grid ───────────────────────────── */
-    .sticker-grid {
-      display: flex;
-      flex-wrap: wrap;
-      width: 90mm;           /* 3 columns × 30mm */
-      margin: 12px auto;
-      background: #fff;
-      border: 1px dashed #ccc;
-    }
-
-    @media print {
-      .sticker-grid {
-        width: 90mm;
-        margin: 0;
-        border: none;
-      }
-    }
-
-    /* ── Single sticker ─────────────────────────── */
-    .sticker {
-      width: 30mm;
-      height: 16mm;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0.4mm 0.6mm;
-      border: 0.2mm solid #e2e8f0;  /* faint guide line – invisible on print */
-      background: #fff;
-    }
-
-    @media print {
-      .sticker {
-        border: none;
-        /* hard-cut between stickers – no bleed */
-        break-inside: avoid;
-        page-break-inside: avoid;
-      }
-    }
-
-    .sticker-name {
-      font-size: 4.5pt;
-      font-weight: 700;
-      color: #000;
-      text-align: center;
-      line-height: 1.15;
-      max-width: 29mm;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 0.3mm;
-    }
-
-    .sticker svg {
-      /* JsBarcode fills whatever width/height we give it */
-      display: block;
-      max-width: 28mm;
-      height: 7.5mm;
-    }
-
-    .sticker-price {
-      font-size: 5pt;
-      font-weight: 700;
-      color: #000;
-      margin-top: 0.3mm;
-      letter-spacing: 0.3pt;
-    }
-
-    .sticker-code {
-      font-size: 3.8pt;
-      color: #444;
-      margin-top: 0.1mm;
-      letter-spacing: 0.2pt;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- ── Screen controls ── -->
-  <div class="screen-bar">
-    <div>
-      <h1>{{ $product->name }}</h1>
-      <span>{{ $qty }} sticker(s) · 30 × 16 mm · 3-column roll</span>
-    </div>
-    <button class="btn-print" onclick="window.print()">🖨 Print</button>
-  </div>
-
-  <!-- ── Sticker sheet ── -->
-  <div class="sticker-grid" id="grid">
-    @php
-      $barcode = $product->barcode ?: ($product->code ?: $product->id);
-      $name    = $product->name ?? '';
-      $price   = number_format($product->selling_price ?? 0, 2);
-    @endphp
-
-    @for ($i = 0; $i < $qty; $i++)
-    <div class="sticker">
-      <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
-      {{-- JsBarcode targets each svg by unique id --}}
-      <svg id="bc-{{ $i }}" data-barcode="{{ $barcode }}"></svg>
-      <div class="sticker-price">Rs. {{ $price }}</div>
-      <div class="sticker-code">{{ $barcode }}</div>
-    </div>
-    @endfor
-  </div>
-
-  <script>
-    document.querySelectorAll('svg[data-barcode]').forEach(function(el) {
-      try {
-        JsBarcode(el, el.getAttribute('data-barcode'), {
-          format:      'CODE128',
-          width:       1.1,
-          height:      30,       // px – scaled by CSS mm
-          displayValue: false,   // we show it as text below
-          margin:      1,
-          lineColor:   '#000',
-          background:  '#fff',
-        });
-      } catch(e) {
-        // Fallback: show plain text if barcode is invalid
-        el.outerHTML = '<span style="font-size:5pt;color:red">Invalid</span>';
       }
     });
   </script>
