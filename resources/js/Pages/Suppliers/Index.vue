@@ -92,6 +92,7 @@
           <table id="SupplierTable" class="w-full text-gray-700 bg-white border border-gray-300 rounded-lg shadow-md table-auto">
             <thead>
               <tr class="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-[13px] text-white border-b border-blue-700">
+                <th class="p-4 font-semibold tracking-wide text-left uppercase">Code</th>
                 <th class="p-4 font-semibold tracking-wide text-left uppercase">Name</th>
                 <th class="p-4 font-semibold tracking-wide text-left uppercase">Contact</th>
                 <th class="p-4 font-semibold tracking-wide text-left uppercase">Image</th>
@@ -105,6 +106,7 @@
             </thead>
             <tbody class="text-[13px] font-normal">
               <tr v-for="supplier in allsuppliers" :key="supplier.id" class="transition duration-200 ease-in-out hover:bg-gray-50 hover:shadow-lg">
+                <td class="p-4 font-mono text-xs border-t border-gray-200">{{ supplier.supplier_code || '—' }}</td>
                 <td class="p-4 font-bold border-t border-gray-200">{{ supplier.name || "N/A" }}</td>
                 <td class="p-4 border-t border-gray-200">{{ supplier.contact || "N/A" }}</td>
                 <td class="p-4 border-t border-gray-200">
@@ -119,6 +121,12 @@
                 </td>
                 <td class="p-4 text-center border-t border-gray-200">
                   <div class="inline-flex items-center space-x-2">
+                    <a
+                      v-if="supplier.supplier_code"
+                      :href="`/suppliers/${supplier.id}/barcode`"
+                      target="_blank"
+                      class="px-3 py-1 bg-teal-500 text-white rounded-lg text-xs hover:bg-teal-600 transition"
+                    >Barcode</a>
                     <Link :href="`/grn?supplier_id=${supplier.id}`" class="px-3 py-1 bg-green-500 text-white rounded-lg text-xs hover:bg-green-600 transition">GRNs</Link>
                     <button
                       :class="HasRole([`Admin`]) ? `px-3 py-1 bg-blue-500 text-white rounded-lg text-xs` : `px-3 py-1 bg-blue-300 text-white rounded-lg text-xs cursor-not-allowed`"
@@ -192,7 +200,7 @@ $(document).ready(function () {
     dom: "Bfrtip",
     pageLength: 10,
     buttons: [],
-    columnDefs: [{ targets: [2, 5, 6, 7, 8], searchable: false, orderable: false }],
+    columnDefs: [{ targets: [3, 6, 7, 8, 9], searchable: false, orderable: false }],
     initComplete: function () {
       let searchInput = $("div.dataTables_filter input");
       searchInput.attr("placeholder", "Search ...");

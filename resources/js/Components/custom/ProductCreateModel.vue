@@ -163,6 +163,22 @@
                             >
                               {{ supplierForm.errors.name }}
                             </span>
+
+                            <label class="block text-md font-bold text-gray-700 mt-4"
+                              >Supplier Code: <span class="text-gray-400 text-sm font-normal">(optional — auto-generated if blank)</span></label
+                            >
+                            <input
+                              v-model="supplierForm.supplier_code"
+                              type="text"
+                              placeholder="e.g. SUP-20260328-0001"
+                              class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-orange-400"
+                            />
+                            <span
+                              v-if="supplierForm.errors.supplier_code"
+                              class="mt-2 text-red-500"
+                            >
+                              {{ supplierForm.errors.supplier_code }}
+                            </span>
                             <div class="mt-4">
                               <button
                                 type="submit"
@@ -586,6 +602,7 @@ const categoryForm = useForm({
 
 const supplierForm = useForm({
   name: "",
+  supplier_code: "",
 });
 
 // Functions to handle dialog open/close
@@ -689,7 +706,7 @@ const submitSupplier = async () => {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
         'Accept': 'application/json',
       },
-      body: JSON.stringify({ name: supplierForm.name }),
+      body: JSON.stringify({ name: supplierForm.name, supplier_code: supplierForm.supplier_code || null }),
     });
     if (!res.ok) {
       const data = await res.json();
@@ -701,6 +718,7 @@ const submitSupplier = async () => {
     form.supplier_id = newSupplier.id;
     successMessage.value = `Supplier "${newSupplier.name}" added!`;
     supplierForm.name = '';
+    supplierForm.supplier_code = '';
     supplierForm.clearErrors();
     closeDialog();
   } catch (e) {

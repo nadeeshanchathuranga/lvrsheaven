@@ -38,6 +38,25 @@
             <form @submit.prevent="submit" enctype="multipart/form-data">
               <!-- Modal Form -->
               <div class="grid grid-cols-2 gap-6 mt-6 text-left">
+                <!-- Supplier Code -->
+                <div class="col-span-2">
+                  <label class="block text-sm font-medium text-gray-300">Supplier Code:</label>
+                  <div class="flex gap-2 mt-2">
+                    <input
+                      v-model="form.supplier_code"
+                      type="text"
+                      class="flex-1 px-4 py-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                    />
+                    <a
+                      v-if="selectedSupplier?.id"
+                      :href="`/suppliers/${selectedSupplier.id}/barcode`"
+                      target="_blank"
+                      class="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-md hover:bg-green-700 whitespace-nowrap"
+                    >Print Barcode</a>
+                  </div>
+                  <span v-if="form.errors.supplier_code" class="mt-1 text-red-500 text-sm">{{ form.errors.supplier_code }}</span>
+                </div>
+
                 <!-- Supplier Name -->
                 <div>
                   <label class="block text-sm font-medium text-gray-300">
@@ -237,6 +256,7 @@ const { open, selectedSupplier } = defineProps({
 
 // Reactive form for managing supplier details
 const form = useForm({
+  supplier_code: "",
   name: "",
   contact: "",
   email: "",
@@ -254,6 +274,7 @@ watch(
   () => selectedSupplier,
   (newValue) => {
     if (newValue) {
+      form.supplier_code = newValue.supplier_code || "";
       form.name = newValue.name || "";
       form.contact = newValue.contact || "";
       form.email = newValue.email || "";

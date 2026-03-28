@@ -46,6 +46,16 @@ class SupplierController extends Controller
     //     ]);
     // }
 
+    private function generateSupplierCode(): string
+    {
+        $prefix = 'SUP-' . now()->format('Ymd') . '-';
+        $last = Supplier::where('supplier_code', 'like', $prefix . '%')
+            ->latest('id')
+            ->value('supplier_code');
+        $next = $last ? ((int) substr($last, -4)) + 1 : 1;
+        return $prefix . str_pad($next, 4, '0', STR_PAD_LEFT);
+    }
+
     public function store(Request $request)
     {
         if (!Gate::allows('hasRole', ['Admin'])) {
@@ -53,12 +63,15 @@ class SupplierController extends Controller
         }
 
         $validated = $request->validate([
+            'supplier_code' => 'nullable|string|max:50|unique:suppliers,supplier_code',
             'name'    => 'required|string|max:191',
             'contact' => 'nullable|string|max:20',
             'email'   => 'nullable|email|max:255|unique:suppliers,email',
             'address' => 'nullable|string|max:500',
             'image'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
         ]);
+
+        $validated['supplier_code'] = $validated['supplier_code'] ?? $this->generateSupplierCode();
 
 
 
@@ -89,17 +102,20 @@ class SupplierController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:191',
+            'name'          => 'required|string|max:191',
+            'supplier_code' => 'nullable|string|max:50|unique:suppliers,supplier_code',
         ]);
 
         // Generate a unique placeholder email so the unique constraint is satisfied
-        $validated['email'] = 'supplier_' . uniqid() . '@noemail.local';
+        $validated['email']         = 'supplier_' . uniqid() . '@noemail.local';
+        $validated['supplier_code'] = $validated['supplier_code'] ?? $this->generateSupplierCode();
 
         $supplier = Supplier::create($validated);
 
         return response()->json([
-            'id'   => $supplier->id,
-            'name' => $supplier->name,
+            'id'            => $supplier->id,
+            'name'          => $supplier->name,
+            'supplier_code' => $supplier->supplier_code,
         ]);
     }
 
@@ -112,6 +128,7 @@ class SupplierController extends Controller
         }
         // Validate incoming data
         $validated = $request->validate([
+            'supplier_code' => 'nullable|string|max:50|unique:suppliers,supplier_code,' . $supplier->id,
             'name' => 'nullable|string|max:191',
             'contact' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255|unique:suppliers,email,' . $supplier->id,
@@ -161,5 +178,14 @@ class SupplierController extends Controller
         $supplier->delete();
 
         return redirect()->route('suppliers.index')->banner('Supplier deleted successfully.');
+    }
+
+    public function barcode(Supplier $supplier)
+    {
+        if (!Gate::allows('hasRole', ['Admin', 'Manager'])) {
+            abort(403, 'Unauthorized');
+        }
+
+        return view('supplier-barcode', compact('supplier'));
     }
 }

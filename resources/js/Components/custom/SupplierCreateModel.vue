@@ -37,6 +37,18 @@
         <form @submit.prevent="submit" enctype="multipart/form-data">
   <!-- Modal Form -->
   <div class="grid grid-cols-2 gap-6 mt-6 text-left">
+    <!-- Supplier Code -->
+    <div class="col-span-2">
+      <label class="block text-sm font-medium text-gray-300">Supplier Code <span class="text-gray-400 text-xs">(leave blank to auto-generate)</span>:</label>
+      <input
+        v-model="form.supplier_code"
+        type="text"
+        placeholder="e.g. SUP-20260328-0001"
+        class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+      />
+      <span v-if="form.errors.supplier_code" class="mt-1 text-red-500 text-sm">{{ form.errors.supplier_code }}</span>
+    </div>
+
     <!-- Supplier Name -->
     <div>
       <label class="block text-sm font-medium text-gray-300">
@@ -174,6 +186,7 @@ defineProps({
 });
 
 const form = useForm({
+  supplier_code: "",
   name: "",
   contact: "",
   email: "",
