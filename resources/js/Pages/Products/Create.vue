@@ -66,51 +66,6 @@
             }}</span>
           </div> -->
 
-          <!-- Size Input -->
-
-
-  <div>
-    <label for="size" class="block text-sm font-medium text-gray-700">Size</label>
-    <select
-      v-model="form.size_id"
-      id="size"
-      class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-    >
-      <option :value="null" disabled>Select Size</option>
-      <option v-for="size in sizes" :key="size.id" :value="size.id">
-        {{ size.name }}
-      </option>
-    </select>
-    <span v-if="form.errors.size" class="text-sm text-red-500">
-      {{ form.errors.size }}
-    </span>
-  </div>
-
-
-
-
-
-
-          <!-- Color Input -->
-          <div>
-            <label for="color" class="block text-sm font-medium text-gray-700"
-              >Color</label
-            >
-            <select
-              v-model="form.color_id"
-              id="color"
-              class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-            >
-              <option :value="null" disabled>Select Color</option>
-              <option v-for="color in colors" :key="color.id" :value="color.id">
-                {{ color.name }}
-              </option>
-            </select>
-            <span v-if="form.errors.color_id" class="text-sm text-red-500">{{
-              form.errors.color_id
-            }}</span>
-          </div>
-
           <!-- Cost Price Input -->
           <div>
             <label
@@ -259,22 +214,11 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 const props = defineProps({
   products: Array,
   categories: Array,
-  colors: Array,
-//   suppliers: Array,
-  sizes: Array,
 });
-
-// onMounted(() => {
-//   console.log("Categories:", props.categories);
-//   console.table(props.categories);
-// });
 
 const form = useForm({
   category_id: null,
   name: "",
-//   description: "",
-  size_id: "",
-  color_id: "",
   cost_price: null,
   selling_price: null,
   stock_quantity: null,

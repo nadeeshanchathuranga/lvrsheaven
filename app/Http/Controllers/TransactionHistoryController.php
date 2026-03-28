@@ -8,7 +8,6 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product; 
 use App\Models\CompanyInfo;
-use App\Models\StockTransaction;
 use Illuminate\Support\Facades\Gate;
 
 class TransactionHistoryController extends Controller
@@ -45,16 +44,6 @@ public function destroy(Request $request)
         $product = Product::find($saleItem->product_id);
         if ($product) {
             $product->increment('stock_quantity', $saleItem->quantity);
-            
-            // Log the stock transaction
-            StockTransaction::create([
-                'product_id' => $saleItem->product_id,
-                'transaction_type' => 'Deleted',
-                'quantity' => $saleItem->quantity,
-                'transaction_date' => now(),
-                'supplier_id' => $product->supplier_id ?? null, // If applicable
-                'reason' => null,
-            ]);
         }
     }
 

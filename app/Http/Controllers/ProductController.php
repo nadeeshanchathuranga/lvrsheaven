@@ -8,7 +8,6 @@ use App\Models\Color;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
-use App\Models\StockTransaction;
 use App\Traits\GeneratesUniqueCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -35,32 +34,25 @@ class ProductController extends Controller
     {
         $query = $request->input('search');
         $sortOrder = $request->input('sort');
-        $selectedColor = $request->input('color');
-        $selectedSize = $request->input('size');
+        $selectedSupplier = $request->input('selectedSupplier');
         $stockStatus = $request->input('stockStatus');
         $selectedCategory = $request->input('selectedCategory');
 
-$productsQuery = Product::with('category', 'color', 'size', 'supplier')
-        ->whereNotNull('products.name')
-        ->with([
-        'promotionItems:id,promotion_id,product_id,quantity',
-        'promotionItems.product:id,name'
-    ])
+        $productsQuery = Product::with('category', 'supplier')
+            ->whereNotNull('products.name')
+            ->with([
+                'promotionItems:id,promotion_id,product_id,quantity',
+                'promotionItems.product:id,name'
+            ])
             ->when($query, function ($queryBuilder) use ($query) {
                 $queryBuilder->where(function ($subQuery) use ($query) {
                     $subQuery->where('name', 'like', "%{$query}%")
-                        ->orWhere('code', 'like', "%{$query}%");
+                        ->orWhere('code', 'like', "%{$query}%")
+                        ->orWhere('barcode', 'like', "%{$query}%");
                 });
             })
-            ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
-                $queryBuilder->whereHas('color', function ($colorQuery) use ($selectedColor) {
-                    $colorQuery->where('name', $selectedColor);
-                });
-            })
-            ->when($selectedSize, function ($queryBuilder) use ($selectedSize) {
-                $queryBuilder->whereHas('size', function ($sizeQuery) use ($selectedSize) {
-                    $sizeQuery->where('name', $selectedSize);
-                });
+            ->when($selectedSupplier, function ($queryBuilder) use ($selectedSupplier) {
+                $queryBuilder->where('supplier_id', $selectedSupplier);
             })
             ->when(in_array($sortOrder, ['asc', 'desc']), function ($queryBuilder) use ($sortOrder) {
                 $queryBuilder->orderBy('selling_price', $sortOrder);
@@ -90,28 +82,21 @@ $productsQuery = Product::with('category', 'color', 'size', 'supplier')
     {
         $query = $request->input('search');
         $sortOrder = $request->input('sort');
-        $selectedColor = $request->input('color');
-        $selectedSize = $request->input('size');
+        $selectedSupplier = $request->input('selectedSupplier');
         $stockStatus = $request->input('stockStatus');
         $selectedCategory = $request->input('selectedCategory');
 
 
-        $productsQuery = Product::with('category', 'color', 'size', 'supplier')
+        $productsQuery = Product::with('category', 'supplier')
             ->when($query, function ($queryBuilder) use ($query) {
                 $queryBuilder->where(function ($subQuery) use ($query) {
                     $subQuery->where('name', 'like', "%{$query}%")
-                        ->orWhere('code', 'like', "%{$query}%");
+                        ->orWhere('code', 'like', "%{$query}%")
+                        ->orWhere('barcode', 'like', "%{$query}%");
                 });
             })
-            ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
-                $queryBuilder->whereHas('color', function ($colorQuery) use ($selectedColor) {
-                    $colorQuery->where('name', $selectedColor);
-                });
-            })
-            ->when($selectedSize, function ($queryBuilder) use ($selectedSize) {
-                $queryBuilder->whereHas('size', function ($sizeQuery) use ($selectedSize) {
-                    $sizeQuery->where('name', $selectedSize);
-                });
+            ->when($selectedSupplier, function ($queryBuilder) use ($selectedSupplier) {
+                $queryBuilder->where('supplier_id', $selectedSupplier);
             })
             ->when(in_array($sortOrder, ['asc', 'desc']), function ($queryBuilder) use ($sortOrder) {
                 $queryBuilder->orderBy('selling_price', $sortOrder);
@@ -132,30 +117,20 @@ $productsQuery = Product::with('category', 'color', 'size', 'supplier')
 
         $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
 
-
-        // $allcategories = Category::with('parent')->get();
-        $allcategories = Category::with('parent')->get()->map(function ($category) {
-            $category->hierarchy_string = $category->hierarchy_string; // Access it
-            return $category;
-        });
-        $colors = Color::orderBy('created_at', 'desc')->get();
-        $sizes = Size::orderBy('created_at', 'desc')->get();
-        $suppliers = Supplier::orderBy('created_at', 'desc')->get();
+        $allcategories = Category::orderBy('name')->get(['id', 'name']);
+        $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
 
 
         return Inertia::render('Products/Index', [
             'products' => $products,
             'allcategories' => $allcategories,
-            'colors' => $colors,
-            'sizes' => $sizes,
             'suppliers' => $suppliers,
             'totalProducts' => $count,
             'search' => $query,
             'sort' => $sortOrder,
-            'color' => $selectedColor,
-            'size' => $selectedSize,
             'stockStatus' => $stockStatus,
-            'selectedCategory' => $selectedCategory
+            'selectedCategory' => $selectedCategory,
+            'selectedSupplier' => $selectedSupplier,
         ]);
     }
 
@@ -243,18 +218,6 @@ $productsQuery = Product::with('category', 'color', 'size', 'supplier')
             $product = Product::create($validated);
             // $product->update(['code' => 'PROD-' . $product->id]);
 
-            // Add stock transaction if stock quantity is provided
-            $stockQuantity = $validated['stock_quantity'] ?? 0; // Default to 0 if not provided
-            if ($stockQuantity > 0) {
-                StockTransaction::create([
-                    'product_id' => $product->id,
-                    'transaction_type' => 'Added',
-                    'quantity' => $stockQuantity,
-                    'transaction_date' => now(),
-                    'supplier_id' => $validated['supplier_id'] ?? null,
-                ]);
-            }
-
             // Redirect with success message
             return redirect()->route('products.index')->banner('Product created successfully');
         } catch (\Exception $e) {
@@ -312,25 +275,6 @@ $productsQuery = Product::with('category', 'color', 'size', 'supplier')
             }
 
             $product = Product::create($validated);
-
-
-            // Add stock transaction if stock quantity is provided
-            $stockQuantity = $validated['stock_quantity'] ?? 0; // Default to 0 if not provided
-            if ($stockQuantity > 0) {
-                StockTransaction::create([
-                    'product_id' => $product->id,
-                    'transaction_type' => 'Added',
-                    'quantity' => $stockQuantity,
-                    'transaction_date' => now(),
-                    'supplier_id' => $validated['supplier_id'] ?? null,
-                ]);
-            }
-
-
-
-
-
-
 
             // Redirect with success message
             return redirect()->route('products.index')->banner('Product created successfully');
@@ -450,21 +394,6 @@ $productsQuery = Product::with('category', 'color', 'size', 'supplier')
         // Update product
         $product->update($validated);
 
-
-
-        if ($stockChange !== 0) {
-            // Determine transaction type
-            $transactionType = $stockChange > 0 ? 'Added' : 'Deducted';
-
-            StockTransaction::create([
-                'product_id' => $product->id,
-                'transaction_type' => $transactionType,
-                'quantity' => abs($stockChange),
-                'transaction_date' => now(),
-                'supplier_id' => $validated['supplier_id'] ?? null,
-            ]);
-        }
-
         return redirect()->route('products.index')->with('banner', 'Product updated successfully');
     }
 
@@ -515,21 +444,6 @@ $productsQuery = Product::with('category', 'color', 'size', 'supplier')
 
         if ($imageUsageCount === 0 && Storage::disk('public')->exists($imagePath)) {
             Storage::disk('public')->delete($imagePath);
-        }
-
-        try {
-            // Log the stock transaction
-            StockTransaction::create([
-                'product_id' => $product->id,
-                'transaction_type' => 'Deleted',
-                'quantity' => $product->stock_quantity ?? 0, // Fallback to 0 if undefined
-                'transaction_date' => now(),
-                'supplier_id' => $product->supplier_id ?? null, // Handle potential null value
-            ]);
-        } catch (\Exception $e) {
-            // Log error and return a failure message
-            report($e);
-            return redirect()->route('products.index')->withErrors('Failed to log stock transaction. Please try again.');
         }
 
         // Delete the product
@@ -721,14 +635,6 @@ public function fetchProducts2(Request $request)
                 $p->total_quantity  = (int)($p->total_quantity ?? $p->stock_quantity) - (int)$i['quantity'];
                 if ($p->total_quantity < 0) $p->total_quantity = 0;
                 $p->save();
-
-                \App\Models\StockTransaction::create([
-                    'product_id'       => $p->id,
-                    'transaction_type' => 'Deducted',
-                    'quantity'         => (int)$i['quantity'],
-                    'transaction_date' => now(),
-                    'supplier_id'      => $validated['supplier_id'] ?? null,
-                ]);
             }
 
             return redirect()->route('products.index')->banner('Promotion created successfully');

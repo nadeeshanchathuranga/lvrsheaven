@@ -65,9 +65,23 @@
 
       <!-- Items Table -->
       <div class="bg-white rounded-2xl shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 class="text-lg font-bold text-gray-800">Received Items</h3>
-          <span class="text-sm text-gray-500">{{ grn.items?.length ?? 0 }} items</span>
+        <div class="px-6 py-4 border-b border-gray-100">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-gray-800">Received Items</h3>
+            <span class="text-sm text-gray-500">{{ filteredItems.length }} of {{ grn.items?.length ?? 0 }} items</span>
+          </div>
+          <!-- Search Input -->
+          <div class="relative">
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search by product name, code, or barcode..."
+              class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <svg v-if="searchQuery" @click="searchQuery = ''" class="absolute right-3 top-2.5 h-5 w-5 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm text-gray-700">
@@ -75,34 +89,47 @@
               <tr class="bg-gray-50 border-b border-gray-200 text-[13px] text-gray-500 uppercase">
                 <th class="px-6 py-3 text-left">#</th>
                 <th class="px-6 py-3 text-left">Product</th>
+                <th class="px-6 py-3 text-left">Category</th>
+                <th class="px-6 py-3 text-left">Barcode</th>
                 <th class="px-6 py-3 text-center">Qty Received</th>
                 <th class="px-6 py-3 text-center">Unit Cost</th>
-                <th class="px-6 py-3 text-center">Batch No.</th>
-                <th class="px-6 py-3 text-center">Expire Date</th>
+                <th class="px-6 py-3 text-center">Selling Price</th>
                 <th class="px-6 py-3 text-right">Total</th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="(item, idx) in grn.items"
+                v-for="(item, idx) in filteredItems"
                 :key="item.id"
                 class="border-b border-gray-100 hover:bg-gray-50 transition"
               >
                 <td class="px-6 py-4 text-gray-400">{{ idx + 1 }}</td>
                 <td class="px-6 py-4">
                   <p class="font-semibold text-gray-800">{{ item.product?.name ?? '—' }}</p>
-                  <p class="text-xs text-gray-400">{{ item.product?.code }}</p>
+                  <p class="text-xs text-gray-400">Code: {{ item.product?.code ?? 'N/A' }}</p>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
+                    {{ item.product?.category?.name ?? 'Uncategorized' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4">
+                  <p class="font-mono text-sm text-gray-700">{{ item.product?.barcode ?? 'N/A' }}</p>
                 </td>
                 <td class="px-6 py-4 text-center font-bold text-blue-700">{{ item.quantity }}</td>
                 <td class="px-6 py-4 text-center">{{ formatCurrency(item.unit_cost) }}</td>
-                <td class="px-6 py-4 text-center text-gray-500">{{ item.batch_no || '—' }}</td>
-                <td class="px-6 py-4 text-center text-gray-500">{{ item.expire_date ? formatDate(item.expire_date) : '—' }}</td>
+                <td class="px-6 py-4 text-center font-semibold text-green-700">{{ formatCurrency(item.product?.selling_price ?? 0) }}</td>
                 <td class="px-6 py-4 text-right font-semibold">{{ formatCurrency(item.total_cost) }}</td>
+              </tr>
+              <tr v-if="filteredItems.length === 0">
+                <td colspan="8" class="px-6 py-8 text-center text-gray-400">
+                  No items match your search "{{ searchQuery }}"
+                </td>
               </tr>
             </tbody>
             <tfoot>
               <tr class="bg-gray-50 border-t-2 border-gray-300">
-                <td colspan="6" class="px-6 py-4 text-right font-bold text-gray-700">Grand Total</td>
+                <td colspan="7" class="px-6 py-4 text-right font-bold text-gray-700">Grand Total</td>
                 <td class="px-6 py-4 text-right font-bold text-xl text-gray-900">{{ formatCurrency(grn.total_amount) }}</td>
               </tr>
             </tfoot>
@@ -242,6 +269,19 @@ import { HasRole } from '@/Utils/Permissions';
 
 const props = defineProps({
   grn: Object,
+});
+
+const searchQuery = ref('');
+
+const filteredItems = computed(() => {
+  if (!searchQuery.value) return props.grn.items || [];
+  const query = searchQuery.value.toLowerCase();
+  return (props.grn.items || []).filter(item => {
+    const name = item.product?.name?.toLowerCase() || '';
+    const code = item.product?.code?.toLowerCase() || '';
+    const barcode = item.product?.barcode?.toLowerCase() || '';
+    return name.includes(query) || code.includes(query) || barcode.includes(query);
+  });
 });
 
 const outstanding = computed(() => parseFloat(props.grn.total_amount) - parseFloat(props.grn.paid_amount));

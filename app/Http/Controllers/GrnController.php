@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Grn;
 use App\Models\GrnItem;
 use App\Models\Product;
-use App\Models\StockTransaction;
 use App\Models\Supplier;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -63,9 +63,11 @@ class GrnController extends Controller
         }
 
         $suppliers = Supplier::orderBy('name')->get(['id', 'name', 'contact', 'email']);
+        $categories = \App\Models\Category::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Grn/Create', [
             'suppliers' => $suppliers,
+            'categories' => $categories,
         ]);
     }
 
@@ -81,14 +83,20 @@ class GrnController extends Controller
             'reference_no'      => 'nullable|string|max:100',
             'notes'             => 'nullable|string|max:1000',
             'items'             => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.is_new_product' => 'nullable|boolean',
+            // New product fields
+            'items.*.name' => 'required_if:items.*.is_new_product,true|string|max:255',
+            'items.*.category_id' => 'nullable|exists:categories,id',
+            'items.*.new_category_name' => 'nullable|string|max:255',
+            'items.*.barcode' => 'nullable|string|max:100',
+            'items.*.selling_price' => 'required_if:items.*.is_new_product,true|numeric|min:0',
+            // Existing fields
             'items.*.quantity'  => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
-            'items.*.batch_no'  => 'nullable|string|max:100',
-            'items.*.expire_date' => 'nullable|date',
         ]);
 
-        return DB::transaction(function () use ($validated) {
+        return DB::transaction(function () use ($validated, $request) {
             $grnNumber = $this->generateGrnNumber();
 
             $totalAmount = collect($validated['items'])->sum(
@@ -108,6 +116,51 @@ class GrnController extends Controller
             ]);
 
             foreach ($validated['items'] as $item) {
+                // Check if this is a new product that needs to be created
+                if (!empty($item['is_new_product']) && $item['is_new_product'] === true) {
+                    // Generate barcode if not provided, encoding the cost
+                    if (empty($item['barcode'])) {
+                        $item['barcode'] = $this->generateUniqueBarcode($item['unit_cost']);
+                    }
+
+                    // Handle category - create new if provided, or use existing
+                    $categoryId = null;
+                    if (!empty($item['new_category_name'])) {
+                        // Create new category
+                        $category = Category::firstOrCreate(
+                            ['name' => trim($item['new_category_name'])],
+                            ['name' => trim($item['new_category_name'])]
+                        );
+                        $categoryId = $category->id;
+                    } elseif (!empty($item['category_id'])) {
+                        // Use existing category
+                        $categoryId = $item['category_id'];
+                    }
+
+                    // Create new product
+                    $product = Product::create([
+                        'name' => $item['name'],
+                        'barcode' => $item['barcode'],
+                        'category_id' => $categoryId,
+                        'supplier_id' => $validated['supplier_id'],
+                        'cost_price' => $item['unit_cost'],
+                        'selling_price' => $item['selling_price'],
+                        'stock_quantity' => $item['quantity'],
+                        'total_quantity' => $item['quantity'],
+                        'purchase_date' => $validated['grn_date'],
+                    ]);
+
+                    $item['product_id'] = $product->id;
+                } else {
+                    // Existing product - update it
+                    $product = Product::find($item['product_id']);
+                    $product->stock_quantity += $item['quantity'];
+                    $product->total_quantity = ($product->total_quantity ?? 0) + $item['quantity'];
+                    $product->cost_price = $item['unit_cost'];
+                    $product->purchase_date = $validated['grn_date'];
+                    $product->save();
+                }
+
                 $lineTotal = $item['unit_cost'] * $item['quantity'];
 
                 GrnItem::create([
@@ -116,36 +169,46 @@ class GrnController extends Controller
                     'quantity'    => $item['quantity'],
                     'unit_cost'   => $item['unit_cost'],
                     'total_cost'  => $lineTotal,
-                    'batch_no'    => $item['batch_no'] ?? null,
-                    'expire_date' => $item['expire_date'] ?? null,
-                ]);
-
-                $product = Product::find($item['product_id']);
-                $product->stock_quantity += $item['quantity'];
-                $product->total_quantity = ($product->total_quantity ?? 0) + $item['quantity'];
-                if (!empty($item['batch_no'])) {
-                    $product->batch_no = $item['batch_no'];
-                }
-                if (!empty($item['expire_date'])) {
-                    $product->expire_date = $item['expire_date'];
-                }
-                $product->cost_price = $item['unit_cost'];
-                $product->purchase_date = $validated['grn_date'];
-                $product->save();
-
-                StockTransaction::create([
-                    'product_id'       => $product->id,
-                    'transaction_type' => 'GRN',
-                    'quantity'         => $item['quantity'],
-                    'transaction_date' => $validated['grn_date'],
-                    'supplier_id'      => $validated['supplier_id'],
-                    'reason'           => 'GRN: ' . $grnNumber,
                 ]);
             }
 
             return redirect()->route('grn.show', $grn->id)
                 ->banner('GRN ' . $grnNumber . ' created successfully.');
         });
+    }
+
+    /**
+     * Generate 12-digit Sri Lankan barcode format with cost encoding
+     * Format: XXX-CCCC-PPPP-C
+     * - First 3 digits: prefix (955 for Sri Lanka)
+     * - Next 4 digits: encoded cost price
+     * - Next 4 digits: random product identifier
+     * - Last digit: check digit
+     */
+    private function generateUniqueBarcode(float $costPrice = 0): string
+    {
+        do {
+            $prefix = '955'; // Sri Lankan prefix
+            
+            // Encode cost in 4 digits
+            $costEncoded = str_pad((string) round($costPrice), 4, '0', STR_PAD_LEFT);
+            $costEncoded = substr($costEncoded, -4); // Take last 4 digits
+            
+            // Random 4-digit product identifier
+            $productId = str_pad((string) rand(0, 9999), 4, '0', STR_PAD_LEFT);
+            
+            // Calculate check digit (modulo 10)
+            $digits = $prefix . $costEncoded . $productId;
+            $sum = 0;
+            for ($i = 0; $i < strlen($digits); $i++) {
+                $sum += (int) $digits[$i] * (($i % 2 === 0) ? 1 : 3);
+            }
+            $checkDigit = (10 - ($sum % 10)) % 10;
+            
+            $barcode = $digits . $checkDigit;
+        } while (Product::where('barcode', $barcode)->exists());
+        
+        return $barcode;
     }
 
     public function show(Grn $grn)
@@ -157,13 +220,33 @@ class GrnController extends Controller
         $grn->load([
             'supplier',
             'createdBy',
-            'items.product',
+            'items.product.category',
             'payments.createdBy',
         ]);
 
         return Inertia::render('Grn/Show', [
             'grn' => $grn,
         ]);
+    }
+
+    public function searchProduct(Request $request)
+    {
+        $query = $request->input('search', '');
+        
+        if (empty($query)) {
+            return response()->json(['products' => []]);
+        }
+
+        $products = Product::with(['category', 'supplier'])
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('code', 'like', "%{$query}%")
+                  ->orWhere('barcode', 'like', "%{$query}%");
+            })
+            ->limit(20)
+            ->get();
+
+        return response()->json(['products' => $products]);
     }
 
     private function generateGrnNumber(): string

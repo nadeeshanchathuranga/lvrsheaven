@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\GoodsReturnNote;
 use App\Models\GoodsReturnNoteItem;
 use App\Models\Product;
-use App\Models\StockTransaction;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -110,16 +109,6 @@ class GoodsReturnNoteController extends Controller
                 // Deduct stock
                 $product = Product::findOrFail($item['product_id']);
                 $product->decrement('stock_quantity', $item['quantity']);
-
-                // Log stock transaction
-                StockTransaction::create([
-                    'product_id'       => $item['product_id'],
-                    'transaction_type' => 'GoodsReturn',
-                    'quantity'         => $item['quantity'],
-                    'transaction_date' => $request->return_date,
-                    'supplier_id'      => $request->supplier_id ?: null,
-                    'reason'           => 'Goods Return Note: ' . $grnNumber,
-                ]);
             }
         });
 

@@ -483,6 +483,101 @@
       </div>
     </div>
 
+    <!-- GRN Details Table -->
+    <div class="w-full bg-white border-4 border-black rounded-xl p-6">
+      <h2 class="text-2xl font-semibold text-slate-700 text-center pb-4">GRN (Goods Received Notes) Details</h2>
+
+      <div class="flex justify-between items-center pb-4">
+        <div class="flex gap-4">
+          <button @click="downloadGRNTablePDF"
+                  class="px-4 py-2 text-md font-semibold text-white bg-orange-600 rounded-lg hover:bg-orange-700 shadow-md">
+            Download PDF
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="py-2 px-4 border-2 border-green-600 rounded-xl bg-green-100 shadow-sm text-center">
+            <p class="text-sm font-extrabold text-black uppercase">
+              Total GRNs:
+              <span class="text-base font-bold">{{ grnTotalCount }}</span>
+            </p>
+          </div>
+          <div class="py-2 px-4 border-2 border-blue-600 rounded-xl bg-blue-100 shadow-sm text-center">
+            <p class="text-sm font-extrabold text-black uppercase">
+              Total Received Value:
+              <span class="text-base font-bold">
+                {{ grnTotalValue.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) }} LKR
+              </span>
+            </p>
+          </div>
+          <div class="py-2 px-4 border-2 border-yellow-600 rounded-xl bg-yellow-100 shadow-sm text-center">
+            <p class="text-sm font-extrabold text-black uppercase">
+              Total Items:
+              <span class="text-base font-bold">
+                {{ grnTotalItems.toLocaleString() }}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto overflow-y-auto max-h-[480px] border rounded-xl mt-2">
+        <table id="grnTbl" class="w-full text-gray-800 bg-white border border-gray-300 rounded-lg shadow-md">
+          <thead class="sticky top-0 z-10">
+            <tr class="bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 text-white text-[14px] border-b border-slate-800">
+              <th class="p-3 text-left font-semibold">#</th>
+              <th class="p-3 text-left font-semibold">GRN Date</th>
+              <th class="p-3 text-left font-semibold">GRN Number</th>
+              <th class="p-3 text-left font-semibold">Supplier</th>
+              <th class="p-3 text-left font-semibold">Reference No</th>
+              <th class="p-3 text-center font-semibold">Items Count</th>
+              <th class="p-3 text-right font-semibold">Total Value (LKR)</th>
+              <th class="p-3 text-right font-semibold">Paid (LKR)</th>
+              <th class="p-3 text-right font-semibold">Outstanding (LKR)</th>
+              <th class="p-3 text-center font-semibold">Status</th>
+            </tr>
+          </thead>
+
+          <tbody class="text-[12px] font-medium">
+            <tr v-for="(grn, i) in props.grns" :key="grn.id ?? i" class="border-b transition duration-200 hover:bg-gray-100">
+              <td class="p-3 text-center">{{ i + 1 }}</td>
+              <td class="p-3 whitespace-nowrap">{{ formatDate(grn.grn_date) }}</td>
+              <td class="p-3 font-bold">{{ grn.grn_number }}</td>
+              <td class="p-3">{{ grn.supplier?.name ?? 'N/A' }}</td>
+              <td class="p-3">{{ grn.reference_no || '—' }}</td>
+              <td class="p-3 text-center">{{ grn.items?.length ?? 0 }}</td>
+              <td class="p-3 text-right">{{ toMoney(grn.total_amount || 0) }}</td>
+              <td class="p-3 text-right">{{ toMoney(grn.paid_amount || 0) }}</td>
+              <td class="p-3 text-right">{{ toMoney((grn.total_amount || 0) - (grn.paid_amount || 0)) }}</td>
+              <td class="p-3 text-center">
+                <span :class="{
+                  'bg-green-100 text-green-700 border-green-500': grn.payment_status === 'paid',
+                  'bg-yellow-100 text-yellow-700 border-yellow-500': grn.payment_status === 'partial',
+                  'bg-red-100 text-red-700 border-red-500': grn.payment_status === 'unpaid'
+                }" class="px-2 py-1 rounded-full text-xs font-semibold capitalize border">
+                  {{ grn.payment_status }}
+                </span>
+              </td>
+            </tr>
+            <tr v-if="!props.grns || props.grns.length === 0">
+              <td colspan="10" class="p-6 text-center text-slate-400 italic">No GRNs found in this date range.</td>
+            </tr>
+          </tbody>
+
+          <tfoot v-if="props.grns && props.grns.length > 0" class="bg-gray-50 text-[12px] font-semibold">
+            <tr>
+              <td class="p-3 text-right" colspan="5">Totals:</td>
+              <td class="p-3 text-center">{{ grnTotalItems.toLocaleString() }}</td>
+              <td class="p-3 text-right">{{ grnTotalValue.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) }}</td>
+              <td class="p-3 text-right">{{ grnTotalPaid.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) }}</td>
+              <td class="p-3 text-right">{{ grnTotalOutstanding.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) }}</td>
+              <td class="p-3"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
     <!-- Shift Summary Table -->
     <div class="w-full bg-white border-4 border-black rounded-xl p-6">
       <h2 class="text-2xl font-semibold text-slate-700 text-center pb-4">Shift Summary</h2>
@@ -568,6 +663,7 @@ ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, LinearScale,
 const props = defineProps({
   products: { type: Array, required: true },
   sales: { type: Array, required: true },
+  grns: { type: Array, default: () => [] },
 
   totalSaleAmount: { type: Number, required: true },
   averageTransactionValue: { type: Number, required: true },
@@ -623,6 +719,13 @@ const totalProfit   = (product) => profitPerUnit(product) * Number(product.sales
 // Product table totals
 const totalSalesQty    = computed(() => products.value.reduce((s, p) => s + Number(p.sales_qty || 0), 0));
 const grandTotalProfit = computed(() => products.value.reduce((s, p) => s + totalProfit(p), 0));
+
+// GRN totals
+const grnTotalCount = computed(() => props.grns?.length ?? 0);
+const grnTotalValue = computed(() => props.grns?.reduce((a, g) => a + (g.total_amount || 0), 0) ?? 0);
+const grnTotalPaid = computed(() => props.grns?.reduce((a, g) => a + (g.paid_amount || 0), 0) ?? 0);
+const grnTotalOutstanding = computed(() => grnTotalValue.value - grnTotalPaid.value);
+const grnTotalItems = computed(() => props.grns?.reduce((a, g) => a + (g.items?.length ?? 0), 0) ?? 0);
 
 // Shift totals
 const shiftTotalOpeningFloat = computed(() => props.shiftSummary.reduce((a, s) => a + (s.opening_float || 0), 0));
@@ -1002,12 +1105,111 @@ const downloadSalesTablePDF = () => {
   doc.save(`Sales_Report_${safe(dateRangeLabel.value)}.pdf`);
 };
 
+// ===== GRN table PDF =====
+const downloadGRNTablePDF = () => {
+  const doc = new jsPDF("l", "mm", "a4");
+  const now = new Date();
 
+  const toMoney = (n) =>
+    (Number(n || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : "");
 
+  // Body rows
+  const rowData = (props.grns || []).map((g, i) => {
+    const date = formatDate(g.grn_date);
+    const grnNumber = g.grn_number || '—';
+    const supplier = g.supplier?.name ?? 'N/A';
+    const refNo = g.reference_no || '—';
+    const itemsCount = g.items?.length ?? 0;
+    const totalValue = Number(g.total_amount || 0);
+    const paid = Number(g.paid_amount || 0);
+    const outstanding = totalValue - paid;
+    const status = g.payment_status || 'unpaid';
 
- 
+    return [
+      i + 1,
+      date,
+      grnNumber,
+      supplier,
+      refNo,
+      itemsCount.toString(),
+      toMoney(totalValue),
+      toMoney(paid),
+      toMoney(outstanding),
+      status.toUpperCase(),
+    ];
+  });
 
-// ===== Stock table PDF =====
+  // Footer totals
+  const totalItems = grnTotalItems.value;
+  const totalValue = grnTotalValue.value;
+  const totalPaid = grnTotalPaid.value;
+  const totalOutstanding = grnTotalOutstanding.value;
+
+  // PDF Header
+  doc.setFontSize(16);
+  doc.text("GRN (Goods Received Notes) Report", 14, 12);
+  doc.setFontSize(10);
+  doc.text(`Date range: ${dateRangeLabel.value} • Generated: ${now.toLocaleString()}`, 14, 18);
+
+  // Table
+  const head = [[
+    "#",
+    "GRN Date",
+    "GRN Number",
+    "Supplier",
+    "Reference No",
+    "Items",
+    "Total Value (LKR)",
+    "Paid (LKR)",
+    "Outstanding (LKR)",
+    "Status",
+  ]];
+
+  const foot = [[
+    { content: "Totals:", colSpan: 5, styles: { halign: "right", fontStyle: "bold" } },
+    { content: totalItems.toLocaleString(), styles: { halign: "center", fontStyle: "bold" } },
+    toMoney(totalValue),
+    toMoney(totalPaid),
+    toMoney(totalOutstanding),
+    "",
+  ]];
+
+  doc.autoTable({
+    head,
+    body: rowData,
+    foot,
+    startY: 24,
+    theme: "striped",
+    styles: { fontSize: 9, cellPadding: 2 },
+    headStyles: { fillColor: [51, 65, 85], textColor: 255 },
+    columnStyles: {
+      0: { cellWidth: 10 },
+      1: { cellWidth: 24 },
+      2: { cellWidth: 32 },
+      3: { cellWidth: 38 },
+      4: { cellWidth: 28 },
+      5: { cellWidth: 18, halign: "center" },
+      6: { cellWidth: 30, halign: "right" },
+      7: { cellWidth: 26, halign: "right" },
+      8: { cellWidth: 32, halign: "right" },
+      9: { cellWidth: 22, halign: "center" },
+    },
+    margin: { top: 18, left: 8, right: 8 },
+    didParseCell: (data) => {
+      if (data.section === "foot") {
+        if (data.column.index === 5) data.cell.styles.halign = "center";
+        if (data.column.index >= 6 && data.column.index <= 8) data.cell.styles.halign = "right";
+        if (data.column.index <= 4) data.cell.styles.halign = "right";
+      }
+    },
+  });
+
+  // Save
+  const safe = (s) => String(s).replace(/[^\dA-Za-z-]/g, "_");
+  doc.save(`GRN_Report_${safe(dateRangeLabel.value)}.pdf`);
+};
+
 const downloadStockTablePDF = () => {
   const tableEl = document.getElementById("stockQtyTbl");
   if (!tableEl) return;

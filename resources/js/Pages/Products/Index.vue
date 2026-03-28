@@ -20,7 +20,7 @@
 }
 </style>
 <template>
-  <Head title="Products" />
+  <Head title="Products and Barcodes" />
   <Banner />
   <div
     class="flex flex-col items-center justify-start min-h-screen py-8 space-y-8 bg-gray-100 md:px-36 px-16"
@@ -29,7 +29,17 @@
     <Header />
     <div class="w-full md:w-5/6 py-12 space-y-16">
       <div class="flex items-center justify-between">
-        <div class="flex items-center justify-center space-x-4"></div>
+        <div class="flex items-center justify-center space-x-4">
+          <button
+            v-if="products.data.length > 0"
+            @click="printAllBarcodes"
+            class="flex items-center gap-3 px-6 py-3 text-white transition duration-200 bg-purple-600 rounded-xl hover:bg-purple-700 font-bold text-lg"
+            title="Print all filtered product barcodes based on stock quantity"
+          >
+            <i class="ri-printer-line text-2xl"></i>
+            <span>Print All Filtered Barcodes</span>
+          </button>
+        </div>
         <p class="text-3xl italic font-bold text-black">
           <span class="px-4 py-1 mr-3 text-white bg-black rounded-xl">{{
             totalProducts
@@ -43,40 +53,9 @@
             <img src="/images/back-arrow.png" class="w-14 h-14" />
           </Link>
           <p class="text-4xl font-bold tracking-wide text-black uppercase">
-            Products
+            Products and Barcodes
           </p>
         </div>
-
-<Link
-      href="/add_promotion"
-      :class="HasRole(['Admin'])
-        ? 'px-12 py-4 text-2xl font-bold tracking-wider text-white uppercase bg-cyan-600 rounded-xl'
-        : 'px-12 py-4 text-2xl font-bold tracking-wider text-white uppercase bg-cyan-600 cursor-not-allowed rounded-xl'"
-      :title="HasRole(['Admin']) ? '' : 'You do not have permission to add more Products'"
-    >
-      <i class="pr-4 ri-add-circle-fill"></i> Add Promotion
-    </Link>
-        <p
-          @click="
-            () => {
-              if (HasRole(['Admin'])) {
-                isCreateModalOpen = true;
-              }
-            }
-          "
-          :class="
-            HasRole(['Admin'])
-              ? 'md:px-12 py-4 px-4 md:text-2xl font-bold tracking-wider text-white uppercase bg-blue-600 rounded-xl'
-              : 'md:px-12 py-4 px-4 md:text-2xl font-bold tracking-wider text-white uppercase bg-blue-600 cursor-not-allowed rounded-xl'
-          "
-          :title="
-            HasRole(['Admin'])
-              ? ''
-              : 'You do not have permission to add more Products'
-          "
-        >
-          <i class="md:pr-4 ri-add-circle-fill"></i> Add More Product
-        </p>
       </div>
 
       <div class="flex items-center space-x-4">
@@ -86,24 +65,13 @@
             v-model="search"
             @input="performSearch"
             type="text"
-            placeholder="Search ..."
+            placeholder="Search by name or barcode..."
             class="w-full custom-input"
           />
         </div>
       </div>
 
       <div class="flex items-center space-x-4">
-        <!-- Search Input on the Left -->
-        <!-- <div class="w-1/3">
-          <input
-            v-model="search"
-            @input="performSearch"
-            type="text"
-            placeholder="Search ..."
-            class="w-full custom-input"
-          />
-        </div> -->
-
         <!-- Filter Dropdowns on the Right -->
         <div class="flex justify-end w-full space-x-2">
           <select
@@ -117,11 +85,23 @@
               :key="category.id"
               :value="category.id"
             >
-              {{
-                category.hierarchy_string
-                  ? category.hierarchy_string + " ----> " + category.name
-                  : category.name
-              }}
+              {{ category.name }}
+            </option>
+          </select>
+
+          <!-- Supplier Filter -->
+          <select
+            v-model="selectedSupplier"
+            @change="applyFilters"
+            class="px-6 py-3 text-xl font-normal tracking-wider text-blue-600 bg-white rounded-lg cursor-pointer custom-select"
+          >
+            <option value="">Filter by Supplier</option>
+            <option
+              v-for="supplier in props.suppliers"
+              :key="supplier.id"
+              :value="supplier.id"
+            >
+              {{ supplier.name }}
             </option>
           </select>
 
@@ -145,38 +125,6 @@
             <option value="">Filter by Price</option>
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
-          </select>
-
-          <!-- Color Filter -->
-          <select
-            v-model="color"
-            @change="applyFilters"
-            class="px-6 py-3 text-xl font-normal tracking-wider text-blue-600 bg-white rounded-lg custom-select"
-          >
-            <option value="">Select Color</option>
-            <option
-              v-for="colorOption in props.colors"
-              :key="colorOption.id"
-              :value="colorOption.name"
-            >
-              {{ colorOption.name }}
-            </option>
-          </select>
-
-          <!-- Size Filter -->
-          <select
-            v-model="size"
-            @change="applyFilters"
-            class="px-6 py-3 text-xl font-normal tracking-wider text-blue-600 bg-white rounded-lg custom-select"
-          >
-            <option value="">Select Size</option>
-            <option
-              v-for="sizeOption in props.sizes"
-              :key="sizeOption.id"
-              :value="sizeOption.name"
-            >
-              {{ sizeOption.name }}
-            </option>
           </select>
 
           <Link
@@ -231,21 +179,6 @@
                 </p>
               </div>
 
-              <div class="flex justify-center space-x-2 items-start w-full">
-                <div class="flex space-x-1 text-gray-400">
-                  <p class="font-bold">Color:</p>
-
-                  <p>{{ product.color?.name || "N/A" }}</p>
-                </div>
-
-                <div class="flex space-x-1 text-gray-400">
-                  <p class="font-bold">Size:</p>
-                  <p>
-                    {{ product.size?.name || "N/A" }}
-                  </p>
-                </div>
-              </div>
-
               <div class="flex items-center justify-center w-full space-x-4">
                 <p
                   class="flex items-center space-x-2 text-justify text-gray-400"
@@ -266,69 +199,14 @@
                   <i class="ri-checkbox-blank-circle-fill"></i> Out of Stock
                 </p>
 
-                <div class="flex space-x-4">
+                <div class="flex justify-center">
                   <button
                     @click="openBarcodeQty(product)"
-                    class="flex items-center justify-center w-10 h-10 text-gray-800 transition duration-200 bg-gray-100 rounded-full cursor-pointer hover:bg-purple-600 hover:text-white"
+                    class="flex items-center justify-center px-4 py-2 gap-2 text-white transition duration-200 bg-purple-600 rounded-lg cursor-pointer hover:bg-purple-700"
                     title="Print Barcode Stickers"
                   >
-                    <i class="ri-barcode-line"></i>
-                  </button>
-
-                  <button
-                    :disabled="!HasRole(['Admin'])"
-                    @click="
-                      () => {
-                        if (HasRole(['Admin'])) {
-                          openDuplicateModal(product);
-                        }
-                      }
-                    "
-                    :class="{
-                      'cursor-not-allowed opacity-50': !HasRole(['Admin']),
-                      'cursor-pointer hover:bg-green-600 hover:text-white':
-                        HasRole(['Admin']),
-                    }"
-                    class="flex items-center justify-center w-10 h-10 text-gray-800 transition duration-200 bg-gray-100 rounded-full"
-                  >
-                    <i class="ri-file-copy-2-line"></i>
-                  </button>
-
-                  <button
-                    :disabled="!HasRole(['Admin'])"
-                    @click="
-                      () => {
-                        if (HasRole(['Admin'])) {
-                          openEditModal(product);
-                        }
-                      }
-                    "
-                    :class="{
-                      'cursor-not-allowed opacity-50': !HasRole(['Admin']),
-                      'cursor-pointer hover:bg-green-600 hover:text-white':
-                        HasRole(['Admin']),
-                    }"
-                    class="flex items-center justify-center w-10 h-10 text-gray-800 transition duration-200 bg-gray-100 rounded-full"
-                  >
-                    <i class="ri-pencil-line"></i>
-                  </button>
-                  <button
-                    :disabled="!HasRole(['Admin'])"
-                    @click="
-                      () => {
-                        if (HasRole(['Admin'])) {
-                          openDeleteModal(product);
-                        }
-                      }
-                    "
-                    :class="{
-                      'cursor-not-allowed opacity-50': !HasRole(['Admin']),
-                      'cursor-pointer hover:bg-green-600 hover:text-white':
-                        HasRole(['Admin']),
-                    }"
-                    class="flex items-center justify-center w-10 h-10 text-gray-800 transition duration-200 bg-gray-100 rounded-full"
-                  >
-                    <i class="ri-delete-bin-line"></i>
+                    <i class="ri-barcode-line text-xl"></i>
+                    <span class="font-semibold">Print Barcode</span>
                   </button>
                 </div>
               </div>
@@ -431,33 +309,25 @@
 
   <ProductCreateModel
     :categories="allcategories"
-    :colors="colors"
-    :sizes="sizes"
     :suppliers="suppliers"
     v-model:open="isCreateModalOpen"
   />
   <ProductUpdateModel
     :categories="allcategories"
-    :colors="colors"
     :suppliers="suppliers"
-    :sizes="sizes"
     v-model:open="isEditModalOpen"
     :selected-product="selectedProduct"
   />
 
   <ProductDuplicateModel
     :categories="allcategories"
-    :colors="colors"
     :suppliers="suppliers"
-    :sizes="sizes"
     v-model:open="isDuplicateModalOpen"
     :selected-product="selectedProduct"
   />
 
   <ProductViewModel
     :categories="allcategories"
-    :colors="colors"
-    :sizes="sizes"
     v-model:open="isViewModalOpen"
     :selected-product="selectedProduct"
   />
@@ -521,25 +391,21 @@ const props = defineProps({
   products: Object,
   categories: Array,
   suppliers: Array,
-  colors: Array,
-  sizes: Array,
   allcategories: Array,
   totalProducts: Number,
   search: String,
   sort: String,
-  color: String,
-  size: String,
   stockStatus: String,
   selectedCategory: String,
+  selectedSupplier: String,
 });
 
 const search = ref(props.search || "");
 const sort = ref(props.sort || "");
-const color = ref(props.color || "");
-const size = ref(props.size || "");
 const suppliers = ref(props.suppliers || "");
 const stockStatus = ref(props.stockStatus || "");
 const selectedCategory = ref(props.selectedCategory || "");
+const selectedSupplier = ref(props.selectedSupplier || "");
 
 const performSearch = debounce(() => {
   applyFilters();
@@ -551,10 +417,9 @@ const applyFilters = (page) => {
     {
       search: search.value,
       sort: sort.value,
-      color: color.value,
-      size: size.value,
       stockStatus: stockStatus.value,
       selectedCategory: selectedCategory.value,
+      selectedSupplier: selectedSupplier.value,
     },
     { preserveState: true }
   );
@@ -584,13 +449,25 @@ const deleteProduct = (id) => {
 };
 const openBarcodeQty = (product) => {
   barcodeQtyProduct.value = product;
-  barcodeQty.value = 1;
+  barcodeQty.value = product.stock_quantity || 1;
 };
 const printBarcodes = () => {
   if (!barcodeQtyProduct.value) return;
   const qty = Math.max(1, parseInt(barcodeQty.value) || 1);
   window.open(`/barcode-sticker/${barcodeQtyProduct.value.id}?qty=${qty}`, '_blank');
   barcodeQtyProduct.value = null;
+};
+
+const printAllBarcodes = () => {
+  // Build the query string with current filters
+  const params = new URLSearchParams();
+  if (search.value) params.append('search', search.value);
+  if (sort.value) params.append('sort', sort.value);
+  if (stockStatus.value) params.append('stockStatus', stockStatus.value);
+  if (selectedCategory.value) params.append('selectedCategory', selectedCategory.value);
+  if (selectedSupplier.value) params.append('selectedSupplier', selectedSupplier.value);
+  
+  window.open(`/barcode-sticker-bulk?${params.toString()}`, '_blank');
 };
 
 const navigateTo = (url) => {

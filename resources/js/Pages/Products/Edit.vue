@@ -58,48 +58,6 @@
     <span v-if="form.errors.description" class="text-sm text-red-500">{{ form.errors.description }}</span>
   </div> -->
 
-          <!-- Size Select -->
-          <div>
-            <label for="size_id" class="block text-sm font-medium text-gray-700"
-              >Size</label
-            >
-            <select
-              v-model="form.size_id"
-              id="size_id"
-              class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-            >
-              <option :value="null" disabled>Select Size</option>
-              <option v-for="size in sizes" :key="size.id" :value="size.id">
-                {{ size.name }}
-              </option>
-            </select>
-            <span v-if="form.errors.size_id" class="text-sm text-red-500">{{
-              form.errors.size_id
-            }}</span>
-          </div>
-
-          <!-- Color Select -->
-          <div>
-            <label
-              for="color_id"
-              class="block text-sm font-medium text-gray-700"
-              >Color</label
-            >
-            <select
-              v-model="form.color_id"
-              id="color_id"
-              class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-            >
-              <option :value="null" disabled>Select Color</option>
-              <option v-for="color in colors" :key="color.id" :value="color.id">
-                {{ color.name }}
-              </option>
-            </select>
-            <span v-if="form.errors.color_id" class="text-sm text-red-500">{{
-              form.errors.color_id
-            }}</span>
-          </div>
-
           <!-- Cost Price Input -->
           <div>
             <label
@@ -257,23 +215,16 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 const props = defineProps({
   product: Object,
   categories: Array,
-  colors: Array,
-  //   suppliers: Array,
-  sizes: Array,
 });
 
 // Initialize form with old values
 const form = useForm({
   category_id: props.product.category_id || null,
   name: props.product.name || "",
-  //   description: props.product.description || '',
-  size_id: props.product.size_id || "",
-  color_id: props.product.color_id || "",
   cost_price: props.product.cost_price || null,
   selling_price: props.product.selling_price || null,
   stock_quantity: props.product.stock_quantity || null,
   barcode: props.product.barcode || "",
-  //   supplier_id: props.product.supplier_id || null,
   image: null,
 });
 

@@ -9,7 +9,6 @@ use App\Models\Report;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Shift;
-use App\Models\StockTransaction;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -140,7 +139,7 @@ class ReportController extends Controller
     $totalCustomer = (clone $salesQuery)->distinct('customer_id')->count('customer_id');
 
     // ---- GRN Summary (filter by grn_date) ----
-    $grnQuery = Grn::query();
+    $grnQuery = Grn::with(['supplier', 'items.product']);
     if ($from && $to) {
         $grnQuery->whereBetween('grn_date', [$from->toDateString(), $to->toDateString()]);
     } elseif ($from) {
@@ -148,7 +147,7 @@ class ReportController extends Controller
     } elseif ($to) {
         $grnQuery->where('grn_date', '<=', $to->toDateString());
     }
-    $grns = $grnQuery->get();
+    $grns = $grnQuery->orderBy('grn_date', 'desc')->get();
     $grnSummary = [
         'total_grns'           => $grns->count(),
         'total_received_value' => (float) $grns->sum('total_amount'),
@@ -196,6 +195,7 @@ class ReportController extends Controller
     return Inertia::render('Reports/Index', [
         'products'                  => $products,
         'sales'                     => $sales,
+        'grns'                      => $grns,
 
         'totalSaleAmount'           => round($totalSaleAmount, 2),
         'totalDiscountLkr'          => round($totalProductDiscountLkr, 2),

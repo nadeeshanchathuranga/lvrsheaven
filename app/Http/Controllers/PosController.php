@@ -11,7 +11,6 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Shift;
 use App\Models\Size;
-use App\Models\StockTransaction;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -213,14 +212,6 @@ class PosController extends Controller
                         'quantity' => $product['quantity'],
                         'unit_price' => $product['selling_price'],
                         'total_price' => $product['quantity'] * $product['selling_price'],
-                    ]);
-
-                    StockTransaction::create([
-                        'product_id' => $product['id'],
-                        'transaction_type' => 'Sold',
-                        'quantity' => $product['quantity'],
-                        'transaction_date' => now(),
-                        'supplier_id' => $productModel->supplier_id ?? null,
                     ]);
 
                     // Update stock quantity

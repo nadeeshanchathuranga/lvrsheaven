@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Barcode Stickers – {{ $product->name }}</title>
+  <title>Bulk Barcode Stickers</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
     /* ─── Print page: exact roll width = 3 × 30mm ─── */
@@ -49,18 +49,12 @@
     }
 
     /* ─── The sticker grid ─── */
-    /*
-      On SCREEN we scale up 3× so stickers are comfortable to view.
-      On PRINT  we reset to exact mm and let the @page handle the rest.
-    */
     .sticker-grid {
       display: grid;
-      grid-template-columns: repeat(3, 30mm);   /* exactly 3 columns */
+      grid-template-columns: repeat(3, 30mm);
       grid-auto-rows: 16mm;
-      /* scale up for screen readability */
       transform: scale(3);
       transform-origin: top left;
-      /* compensate for the scale so the wrapper isn't clipped */
       margin-bottom: calc((16mm * var(--rows) * 2));
     }
 
@@ -79,17 +73,16 @@
       width:  30mm;
       height: 16mm;
       overflow: hidden;
-      position: relative;        /* anchor for the absolute supplier strip */
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 0.5mm 0.8mm;
-      border: 0.3mm dashed #bbb; /* cut-guide on screen */
+      border: 0.3mm dashed #bbb;
       background: #fff;
     }
 
-    /* when a supplier strip is present, shift content left to avoid overlap */
     .sticker.has-supplier {
       padding-right: 5mm;
     }
@@ -135,7 +128,7 @@
       letter-spacing: 0.3pt;
     }
 
-    /* ─── Right supplier code strip (absolute overlay) ─── */
+    /* ─── Right supplier code strip ─── */
     .sticker-supplier {
       position: absolute;
       right: 0;
@@ -146,7 +139,7 @@
       align-items: center;
       justify-content: center;
       writing-mode: vertical-rl;
-      transform: rotate(180deg); /* reads bottom-to-top */
+      transform: rotate(180deg);
       font-size: 3.5pt;
       font-weight: 600;
       color: #555;
@@ -166,25 +159,22 @@
 </head>
 <body>
 
-  <div class="toolbar">
-    <div>
-      <h1>{{ $product->name }}</h1>
-      <p>{{ $qty }} sticker(s) &nbsp;·&nbsp; 30 mm × 16 mm &nbsp;·&nbsp; 3-column roll</p>
-    </div>
-    <button class="btn-print" onclick="window.print()">🖨&nbsp; Print Stickers</button>
-  </div>
-
   @php
-    $barcode      = $product->barcode ?: ($product->code ?: (string)$product->id);
-    $name         = $product->name ?? '';
-    $price        = number_format($product->selling_price ?? 0, 2);
-    $rows         = ceil($qty / 3);
-    $supplierCode = (isset($product->supplier->supplier_code) && trim($product->supplier->supplier_code) !== '') 
-                    ? trim($product->supplier->supplier_code) 
-                    : null;
+    $totalStickers = 0;
+    foreach ($products as $product) {
+      $totalStickers += max(1, $product->stock_quantity ?? 0);
+    }
+    $rows = ceil($totalStickers / 3);
   @endphp
 
-  {{-- CSS variable to compensate transform scale height --}}
+  <div class="toolbar">
+    <div>
+      <h1>Bulk Barcode Print</h1>
+      <p>{{ count($products) }} product(s) &nbsp;·&nbsp; {{ $totalStickers }} sticker(s) &nbsp;·&nbsp; 30 mm × 16 mm &nbsp;·&nbsp; 3-column roll</p>
+    </div>
+    <button class="btn-print" onclick="window.print()">🖨&nbsp; Print All Stickers</button>
+  </div>
+
   <style>
     .sticker-grid { --rows: {{ $rows }}; }
     .sheet-wrap   { min-height: calc({{ $rows }} * 16mm * 3 + 80px); }
@@ -192,16 +182,29 @@
 
   <div class="sheet-wrap">
     <div class="sticker-grid">
-      @for ($i = 0; $i < $qty; $i++)
-      <div class="sticker {{ $supplierCode ? 'has-supplier' : '' }}">
-        <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
-        <svg id="bc-{{ $i }}" data-barcode="{{ $barcode }}"></svg>
-        <div class="sticker-price">Rs. {{ $price }}</div>
-        @if($supplierCode)
-        <div class="sticker-supplier">{{ $supplierCode }}</div>
-        @endif
-      </div>
-      @endfor
+      @php $stickerIndex = 0; @endphp
+      @foreach ($products as $product)
+        @php
+          $barcode = $product->barcode ?: ($product->code ?: (string)$product->id);
+          $name = $product->name ?? '';
+          $price = number_format($product->selling_price ?? 0, 2);
+          $qty = max(1, $product->stock_quantity ?? 0);
+          $supplierCode = (isset($product->supplier->supplier_code) && trim($product->supplier->supplier_code) !== '') 
+                          ? trim($product->supplier->supplier_code) 
+                          : null;
+        @endphp
+        
+        @for ($i = 0; $i < $qty; $i++)
+        <div class="sticker {{ $supplierCode ? 'has-supplier' : '' }}">
+          <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
+          <svg id="bc-{{ $stickerIndex++ }}" data-barcode="{{ $barcode }}"></svg>
+          <div class="sticker-price">Rs. {{ $price }}</div>
+          @if($supplierCode)
+          <div class="sticker-supplier">{{ $supplierCode }}</div>
+          @endif
+        </div>
+        @endfor
+      @endforeach
     </div>
   </div>
 

@@ -16,7 +16,6 @@ use App\Http\Controllers\SizeController;
 use App\Http\Controllers\QuotationController;
 
 use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\StockTransactionController;
 use App\Http\Controllers\TransactionHistoryController;
 use App\Http\Controllers\ManualPosController;
 use App\Http\Controllers\GrnController;
@@ -100,7 +99,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('employees', EmployeeController::class);
     Route::resource('transactionHistory', TransactionHistoryController::class );
     Route::post('/transactions/delete', [TransactionHistoryController::class, 'destroy'])->name('transactions.delete');
-    Route::resource('stock-transition', StockTransactionController::class);
     Route::resource('manualpos', ManualPosController::class);
 
 
@@ -123,6 +121,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // GRN (Goods Received Note)
     Route::resource('grn', GrnController::class)->only(['index', 'create', 'store', 'show']);
+    Route::post('/api/grn/search-product', [GrnController::class, 'searchProduct'])->name('grn.searchProduct');
 
     // Goods Return Note
     Route::resource('goods-return-notes', GoodsReturnNoteController::class)->only(['index', 'create', 'store', 'show']);
@@ -147,3 +146,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::get('/barcode-sticker/{id}', [CategoryController::class, 'barcodeStickerPrint'])->name('barcode.sticker')->middleware('auth');
+Route::get('/barcode-sticker-bulk', [CategoryController::class, 'barcodeStickerBulkPrint'])->name('barcode.sticker.bulk')->middleware('auth');

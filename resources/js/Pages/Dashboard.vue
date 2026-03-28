@@ -60,10 +60,9 @@
               />
             </div>
             <div class="text-container">
-              <p class="title">Products</p>
+              <p class="title">Products and Barcodes</p>
               <p class="description">
-                Add, update, and manage product details, including pricing and
-                stock levels.
+                View product details and print barcodes. Products are added via GRN.
               </p>
             </div>
           </div>
@@ -127,69 +126,6 @@
               <p class="description">
                 Generate insights on sales, inventory, and performance to aid
                 decision-making.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Link>
-
-      <Link href="/colors" v-if="HasRole(['Admin', 'Manager'])">
-        <div class="dashboard-card bg-[#9a9c9c]">
-          <div class="card-content">
-            <div class="icon-container">
-              <img
-                src="/images/dashboard/color-wheel.png"
-                class="icon"
-                alt="dresshub.lk"
-              />
-            </div>
-            <div class="text-container">
-              <p class="title">Colors</p>
-              <p class="description">
-                Easily manage product color options to keep inventory accurate
-                and ensure customers can select their preferred variations.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Link>
-
-      <Link href="/sizes" v-if="HasRole(['Admin', 'Manager'])">
-        <div class="dashboard-card bg-[#36f5f5]">
-          <div class="card-content">
-            <div class="icon-container">
-              <img
-                src="/images/dashboard/measuring-tape.png"
-                class="icon"
-                alt="dresshub.lk"
-              />
-            </div>
-            <div class="text-container">
-              <p class="title">Sizes</p>
-              <p class="description">
-                Organize and update product sizes to streamline inventory
-                tracking and simplify the sales process.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Link>
-
-      <Link href="/stock-transition" v-if="HasRole(['Admin'])">
-        <div class="dashboard-card bg-[#3426ff]">
-          <div class="card-content">
-            <div class="icon-container">
-              <img
-                src="/images/dashboard/stock_transtion.png"
-                class="icon"
-                alt="dresshub.lk"
-              />
-            </div>
-            <div class="text-container">
-              <p class="title">Stock Transition</p>
-              <p class="description">
-                View and manage stock changes, including additions, deductions,
-                and returns, all in one place.
               </p>
             </div>
           </div>

@@ -17,6 +17,45 @@ class CategoryController extends Controller
 
         return view('barcode-sticker', compact('product', 'qty'));
     }
+
+    public function barcodeStickerBulkPrint(Request $request)
+    {
+        $query = $request->input('search');
+        $sortOrder = $request->input('sort');
+        $selectedSupplier = $request->input('selectedSupplier');
+        $stockStatus = $request->input('stockStatus');
+        $selectedCategory = $request->input('selectedCategory');
+
+        $productsQuery = Product::with('supplier')
+            ->when($query, function ($queryBuilder) use ($query) {
+                $queryBuilder->where(function ($subQuery) use ($query) {
+                    $subQuery->where('name', 'like', "%{$query}%")
+                        ->orWhere('code', 'like', "%{$query}%")
+                        ->orWhere('barcode', 'like', "%{$query}%");
+                });
+            })
+            ->when($selectedSupplier, function ($queryBuilder) use ($selectedSupplier) {
+                $queryBuilder->where('supplier_id', $selectedSupplier);
+            })
+            ->when(in_array($sortOrder, ['asc', 'desc']), function ($queryBuilder) use ($sortOrder) {
+                $queryBuilder->orderBy('selling_price', $sortOrder);
+            })
+            ->when($stockStatus, function ($queryBuilder) use ($stockStatus) {
+                if ($stockStatus === 'in') {
+                    $queryBuilder->where('stock_quantity', '>', 0);
+                } elseif ($stockStatus === 'out') {
+                    $queryBuilder->where('stock_quantity', '<=', 0);
+                }
+            })
+            ->when($selectedCategory, function ($queryBuilder) use ($selectedCategory) {
+                $queryBuilder->where('category_id', $selectedCategory);
+            });
+
+        $products = $productsQuery->get();
+
+        return view('barcode-sticker-bulk', compact('products'));
+    }
+
     public function index()
     {
         if (!Gate::allows('hasRole', ['Admin', 'Manager'])) {
