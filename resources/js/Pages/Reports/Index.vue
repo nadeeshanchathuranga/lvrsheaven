@@ -141,8 +141,31 @@
   </div>
 </div>
 
-
-
+<!-- GRN & Goods Returns Summary Cards -->
+<div class="grid w-full md:grid-cols-4 grid-cols-2 gap-4 mb-4">
+  <div class="py-6 flex flex-col justify-center items-center border-2 border-[#16CEC4] w-full space-y-4 rounded-2xl bg-[#16CEC466] shadow-lg hover:-translate-y-1 transition">
+    <h2 class="text-xl font-extrabold tracking-wide text-black uppercase">GRNs Received</h2>
+    <p class="text-2xl font-bold text-black">{{ props.grnSummary.total_grns ?? 0 }}</p>
+  </div>
+  <div class="py-6 flex flex-col justify-center items-center border-2 border-[#16EC7A] w-full space-y-4 rounded-2xl bg-[#16EC7A66] shadow-lg hover:-translate-y-1 transition">
+    <div class="flex flex-col items-center justify-center">
+      <h2 class="text-xl font-extrabold tracking-wide text-black uppercase">Total Received</h2>
+      <h2 class="text-xl font-extrabold tracking-wide text-black uppercase">Value</h2>
+    </div>
+    <p class="text-2xl font-bold text-black">{{ toMoney(props.grnSummary.total_received_value ?? 0) }} LKR</p>
+  </div>
+  <div class="py-6 flex flex-col justify-center items-center border-2 border-[#ECB016] w-full space-y-4 rounded-2xl bg-[#ECB01666] shadow-lg hover:-translate-y-1 transition">
+    <h2 class="text-xl font-extrabold tracking-wide text-black uppercase">Goods Returns</h2>
+    <p class="text-2xl font-bold text-black">{{ props.returnSummary.total_returns ?? 0 }} Notes</p>
+  </div>
+  <div class="py-6 flex flex-col justify-center items-center border-2 border-[#EC1616] w-full space-y-4 rounded-2xl bg-[#EC161666] shadow-lg hover:-translate-y-1 transition">
+    <div class="flex flex-col items-center justify-center">
+      <h2 class="text-xl font-extrabold tracking-wide text-black uppercase">Total Returns</h2>
+      <h2 class="text-xl font-extrabold tracking-wide text-black uppercase">Value</h2>
+    </div>
+    <p class="text-2xl font-bold text-black">{{ toMoney(props.returnSummary.total_return_value ?? 0) }} LKR</p>
+  </div>
+</div>
 
 
 
@@ -460,18 +483,59 @@
       </div>
     </div>
 
+    <!-- Shift Summary Table -->
+    <div class="w-full bg-white border-4 border-black rounded-xl p-6">
+      <h2 class="text-2xl font-semibold text-slate-700 text-center pb-4">Shift Summary</h2>
 
-
-
-
-
-
-
-
-
-
-
-
+      <div class="overflow-x-auto max-h-[420px] border rounded-xl mt-2">
+        <table class="w-full text-gray-800 bg-white border border-gray-300 rounded-lg shadow-md table-auto">
+          <thead class="sticky top-0 z-10">
+            <tr class="bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 text-white text-[14px] border-b border-slate-800">
+              <th class="p-3 text-left font-semibold">#</th>
+              <th class="p-3 text-left font-semibold">Shift #</th>
+              <th class="p-3 text-left font-semibold">Cashier</th>
+              <th class="p-3 text-center font-semibold">Status</th>
+              <th class="p-3 text-center font-semibold">Start Time</th>
+              <th class="p-3 text-center font-semibold">End Time</th>
+              <th class="p-3 text-right font-semibold">Opening Float (LKR)</th>
+              <th class="p-3 text-right font-semibold">Closing Float (LKR)</th>
+              <th class="p-3 text-right font-semibold">Total Sales (LKR)</th>
+            </tr>
+          </thead>
+          <tbody class="text-[12px] font-medium">
+            <tr v-for="(shift, i) in props.shiftSummary" :key="i" class="border-b transition duration-200 hover:bg-gray-100">
+              <td class="p-3 text-center">{{ i + 1 }}</td>
+              <td class="p-3 font-bold">{{ shift.shift_number }}</td>
+              <td class="p-3">{{ shift.cashier }}</td>
+              <td class="p-3 text-center">
+                <span :class="shift.status === 'open'
+                  ? 'bg-green-100 text-green-700 border border-green-500'
+                  : 'bg-slate-100 text-slate-700 border border-slate-400'"
+                  class="px-2 py-1 rounded-full text-xs font-semibold capitalize">
+                  {{ shift.status }}
+                </span>
+              </td>
+              <td class="p-3 text-center">{{ shift.start_time ?? '—' }}</td>
+              <td class="p-3 text-center">{{ shift.end_time ?? '—' }}</td>
+              <td class="p-3 text-right">{{ toMoney(shift.opening_float) }}</td>
+              <td class="p-3 text-right">{{ toMoney(shift.closing_float) }}</td>
+              <td class="p-3 text-right">{{ toMoney(shift.total_sales) }}</td>
+            </tr>
+            <tr v-if="props.shiftSummary.length === 0">
+              <td colspan="9" class="p-6 text-center text-slate-400 italic">No shifts found in this date range.</td>
+            </tr>
+          </tbody>
+          <tfoot v-if="props.shiftSummary.length > 0" class="bg-gray-50 text-[12px] font-semibold">
+            <tr>
+              <td colspan="6" class="p-3 text-right">Totals:</td>
+              <td class="p-3 text-right">{{ toMoney(shiftTotalOpeningFloat) }}</td>
+              <td class="p-3 text-right">{{ toMoney(shiftTotalClosingFloat) }}</td>
+              <td class="p-3 text-right">{{ toMoney(shiftTotalSales) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
 
   </div>
 
@@ -520,7 +584,10 @@ const props = defineProps({
   categorySales: { type: Object, required: true },
   employeeSalesSummary: { type: Object, required: true },
 
-
+  // New module summaries
+  grnSummary: { type: Object, default: () => ({}) },
+  returnSummary: { type: Object, default: () => ({}) },
+  shiftSummary: { type: Array, default: () => [] },
 });
 
 // State
@@ -556,6 +623,11 @@ const totalProfit   = (product) => profitPerUnit(product) * Number(product.sales
 // Product table totals
 const totalSalesQty    = computed(() => products.value.reduce((s, p) => s + Number(p.sales_qty || 0), 0));
 const grandTotalProfit = computed(() => products.value.reduce((s, p) => s + totalProfit(p), 0));
+
+// Shift totals
+const shiftTotalOpeningFloat = computed(() => props.shiftSummary.reduce((a, s) => a + (s.opening_float || 0), 0));
+const shiftTotalClosingFloat = computed(() => props.shiftSummary.reduce((a, s) => a + (s.closing_float || 0), 0));
+const shiftTotalSales        = computed(() => props.shiftSummary.reduce((a, s) => a + (s.total_sales || 0), 0));
 
 // Date filter (IMPORTANT: preserveState false)
 const filterData = () => {

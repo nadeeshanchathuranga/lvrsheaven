@@ -196,6 +196,66 @@
         </div>
       </Link>
 
+      <Link href="/grn" v-if="HasRole(['Admin', 'Manager'])">
+        <div class="dashboard-card bg-[#1a7a4a]">
+          <div class="card-content">
+            <div class="icon-container">
+              <img
+                src="/images/dashboard/stock_transtion.png"
+                class="icon"
+                alt="GRN"
+              />
+            </div>
+            <div class="text-container">
+              <p class="title">GRN</p>
+              <p class="description">
+                Receive new stock from suppliers via Goods Received Notes. Track supplier payments and outstanding balances.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      <Link href="/goods-return-notes" v-if="HasRole(['Admin', 'Manager'])">
+        <div class="dashboard-card bg-[#b91c1c]">
+          <div class="card-content">
+            <div class="icon-container">
+              <img
+                src="/images/dashboard/stock_transtion.png"
+                class="icon"
+                alt="Goods Return"
+              />
+            </div>
+            <div class="text-container">
+              <p class="title">Goods Return</p>
+              <p class="description">
+                Return goods to suppliers. Stock is automatically deducted when a return note is created.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      <Link href="/shifts" v-if="HasRole(['Admin', 'Manager'])">
+        <div class="dashboard-card bg-[#1d4ed8]">
+          <div class="card-content">
+            <div class="icon-container">
+              <img
+                src="/images/dashboard/checkout.png"
+                class="icon"
+                alt="Shifts"
+              />
+            </div>
+            <div class="text-container">
+              <p class="title">Shift Management</p>
+              <p class="description">
+                View and manage all cashier shifts. Monitor opening/closing floats, sales totals, and cash discrepancies.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Link>
+
 
       <Link href="/coupons" v-if="HasRole(['Admin'])">
         <div class="dashboard-card bg-[#FF1744]">

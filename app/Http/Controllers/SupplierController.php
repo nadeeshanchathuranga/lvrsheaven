@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\Grn;
+use App\Models\SupplierPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -17,9 +19,20 @@ class SupplierController extends Controller
 
     public function index()
     {
-        $allsuppliers = Supplier::orderBy('created_at', 'desc')->get();
+        $allsuppliers = Supplier::withCount('grns')
+            ->withSum('grns', 'total_amount')
+            ->withSum('payments', 'amount')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($supplier) {
+                $supplier->total_purchases = (float) ($supplier->grns_sum_total_amount ?? 0);
+                $supplier->total_paid      = (float) ($supplier->payments_sum_amount ?? 0);
+                $supplier->outstanding     = $supplier->total_purchases - $supplier->total_paid;
+                return $supplier;
+            });
+
         return Inertia::render('Suppliers/Index', [
-            'allsuppliers' => $allsuppliers,
+            'allsuppliers'   => $allsuppliers,
             'totalSuppliers' => $allsuppliers->count()
         ]);
     }
@@ -40,11 +53,11 @@ class SupplierController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:191|regex:/^[a-zA-Z\s]+$/',
-           'contact' => 'required|string|regex:/^\d{10}$/',
-            'email' => 'required|email|regex:/^[\w\.-]+@[a-zA-Z0-9\.-]+\.[a-zA-Z]{2,6}$/|max:255|unique:suppliers,email',
-            'address' => 'required|string|max:500',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+            'name'    => 'required|string|max:191',
+            'contact' => 'nullable|string|max:20',
+            'email'   => 'nullable|email|max:255|unique:suppliers,email',
+            'address' => 'nullable|string|max:500',
+            'image'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
         ]);
 
 
@@ -67,6 +80,27 @@ class SupplierController extends Controller
         Supplier::create($validated);
 
         return redirect()->route('suppliers.index')->banner('Supplier created successfully.');
+    }
+
+    public function quickStore(Request $request)
+    {
+        if (!Gate::allows('hasRole', ['Admin', 'Manager'])) {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:191',
+        ]);
+
+        // Generate a unique placeholder email so the unique constraint is satisfied
+        $validated['email'] = 'supplier_' . uniqid() . '@noemail.local';
+
+        $supplier = Supplier::create($validated);
+
+        return response()->json([
+            'id'   => $supplier->id,
+            'name' => $supplier->name,
+        ]);
     }
 
 

@@ -40,22 +40,16 @@
               <!-- Single Column with Buttons -->
               <div class="p-4 rounded-lg text-center">
                 <button
-                  @click="openDialog('size')"
-                  class="px-8 py-3 text-white bg-blue-600 rounded hover:bg-blue-700 text-lg font-medium mx-4"
-                >
-                  Add Size
-                </button>
-                <button
-                  @click="openDialog('color')"
-                  class="px-8 py-3 text-white bg-green-600 rounded hover:bg-green-700 text-lg font-medium mx-4"
-                >
-                  Add Color
-                </button>
-                <button
                   @click="openDialog('category')"
-                  class="px-8 py-3 text-white bg-purple-600 rounded hover:bg-purple-700 before: text-lg font-medium mx-4"
+                  class="px-8 py-3 text-white bg-purple-600 rounded hover:bg-purple-700 text-lg font-medium mx-4"
                 >
                   Add Category
+                </button>
+                <button
+                  @click="openDialog('supplier')"
+                  class="px-8 py-3 text-white bg-orange-500 rounded hover:bg-orange-600 text-lg font-medium mx-4"
+                >
+                  Add Supplier
                 </button>
               </div>
             </div>
@@ -83,88 +77,14 @@
                           class="text-lg font-medium leading-6 text-gray-900"
                         >
                           {{
-                            dialogType === "size"
-                              ? "Add Size"
-                              : dialogType === "color"
-                              ? "Add Color"
-                              : "Add Category"
+                            dialogType === "category"
+                              ? "Add Category"
+                              : "Add Supplier"
                           }}
                         </DialogTitle>
 
                         <div class="mt-4">
                           <!-- Conditional Rendering of Forms -->
-                          <form
-                            v-if="dialogType === 'size'"
-                            @submit.prevent="submitSize"
-                          >
-                            <label class="block text-md font-bold text-gray-700"
-                              >Size Name:</label
-                            >
-                            <input
-                              v-model="sizeForm.sizeName"
-                              type="text"
-                              required
-                              class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                            />
-                            <span
-                              v-if="sizeForm.errors.sizeName"
-                              class="mt-2 text-red-500"
-                            >
-                              {{ sizeForm.errors.sizeName }}
-                            </span>
-                            <div class="mt-4">
-                              <button
-                                type="submit"
-                                class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
-                              >
-                                Save
-                              </button>
-                              <button
-                                type="button"
-                                @click="closeDialog"
-                                class="px-4 py-2 text-gray-700 bg-gray-300 rounded hover:bg-gray-400 ml-2"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </form>
-
-                          <form
-                            v-if="dialogType === 'color'"
-                            @submit.prevent="submitColor"
-                          >
-                            <label class="block text-md font-bold text-gray-700"
-                              >Color Name:</label
-                            >
-                            <input
-                              v-model="colorForm.colorName"
-                              type="text"
-                              required
-                              class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-green-600"
-                            />
-                            <span
-                              v-if="colorForm.errors.colorName"
-                              class="mt-2 text-red-500"
-                            >
-                              {{ colorForm.errors.colorName }}
-                            </span>
-                            <div class="mt-4">
-                              <button
-                                type="submit"
-                                class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700"
-                              >
-                                Save
-                              </button>
-                              <button
-                                type="button"
-                                @click="closeDialog"
-                                class="px-4 py-2 text-gray-700 bg-gray-300 rounded hover:bg-gray-400 ml-2"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </form>
-
                           <form
                             v-if="dialogType === 'category'"
                             @submit.prevent="submitCategory"
@@ -188,7 +108,7 @@
                             >
                               <option value="">No Parent</option>
                               <option
-                                v-for="category in categories"
+                                v-for="category in localCategories"
                                 :key="category.id"
                                 :value="category.id"
                               >
@@ -223,6 +143,42 @@
                               </button>
                             </div>
                           </form>
+
+                          <form
+                            v-if="dialogType === 'supplier'"
+                            @submit.prevent="submitSupplier"
+                          >
+                            <label class="block text-md font-bold text-gray-700"
+                              >Supplier Name: <span class="text-red-500">*</span></label
+                            >
+                            <input
+                              v-model="supplierForm.name"
+                              type="text"
+                              required
+                              class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-orange-400"
+                            />
+                            <span
+                              v-if="supplierForm.errors.name"
+                              class="mt-2 text-red-500"
+                            >
+                              {{ supplierForm.errors.name }}
+                            </span>
+                            <div class="mt-4">
+                              <button
+                                type="submit"
+                                class="px-4 py-2 text-white bg-orange-500 rounded hover:bg-orange-600"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                @click="closeDialog"
+                                class="px-4 py-2 text-gray-700 bg-gray-300 rounded hover:bg-gray-400 ml-2"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
                         </div>
                       </div>
                     </DialogPanel>
@@ -237,7 +193,7 @@
                   <div class="flex items-center gap-8">
                     <div class="w-full">
                   <label class="block text-sm font-medium text-gray-300"
-                    >Category Name:</label
+                    >Category Name: <span class="text-red-500">*</span></label
                   >
                   <select
                     required
@@ -247,7 +203,7 @@
                   >
                     <option value="">Select a Category</option>
                     <option
-                      v-for="category in categories"
+                      v-for="category in localCategories"
                       :key="category.id"
                       :value="category.id"
                     >
@@ -275,7 +231,7 @@
                   >
                     <option value="">Select a Supplier</option>
                     <option
-                      v-for="supplier in suppliers"
+                      v-for="supplier in localSuppliers"
                       :key="supplier.id"
                       :value="supplier.id"
                     >
@@ -324,82 +280,23 @@
                   </div>
                 </div>
                 
-                <div class="flex items-center gap-8">
-                  <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-300"
-                      >Batch No:</label
-                    >
-                    <input
-                      v-model="form.batch_no"
-                      type="text"
-                      id="batch_no"
-                      placeholder="Enter batch no"
-                      class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                    />
-                    <span
-                      v-if="form.errors.batch_no"
-                      class="mt-4 text-red-500"
-                      >{{ form.errors.batch_no }}</span
-                    >
-                  </div>
-                  <div class="w-full">
-                      <label class="block text-sm font-medium text-gray-300"
-                        >Product Name:</label
-                      >
-                      <input
-                        v-model="form.name"
-                        type="text"
-                        id="name"
-                        required
-                        placeholder="Enter Product Name"
-                        class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                      />
-                      <span v-if="form.errors.name" class="mt-4 text-red-500">{{
-                        form.errors.name
-                      }}</span>
-                    </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-300"
+                    >Product Name: <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    v-model="form.name"
+                    type="text"
+                    id="name"
+                    required
+                    placeholder="Enter Product Name"
+                    class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                  />
+                  <span v-if="form.errors.name" class="mt-4 text-red-500">{{
+                    form.errors.name
+                  }}</span>
                 </div>
                 
-                <div>
-                  <div class="flex items-center gap-8">
-                    <!-- First select box with label and error -->
-                    <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-300"
-                      >Purchase Date:</label
-                    >
-                    <input
-                      v-model="form.purchase_date"
-                      type="date"
-                      id="purchase_date"
-                      placeholder="Enter purchase date"
-                      class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                    />
-                    <span
-                      v-if="form.errors.purchase_date"
-                      class="mt-4 text-red-500"
-                      >{{ form.errors.purchase_date }}</span
-                    >
-                  </div>
-                    
-                     <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-300"
-                      >Expire Date:</label
-                    >
-                    <input
-                      v-model="form.expire_date"
-                      type="date"
-                      id="barcode"
-                      placeholder="Enter Barcode"
-                      class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                    />
-                    <span
-                      v-if="form.errors.expire_date"
-                      class="mt-4 text-red-500"
-                      >{{ form.errors.expire_date }}</span
-                    >
-                  </div> 
-                  </div>
-                </div>
                 <div>
                   <div class="flex items-center gap-8">
                     <!-- First select box with label and error -->
@@ -463,7 +360,7 @@
                     <label
                       for="cost_price"
                       class="block text-sm font-medium text-gray-300"
-                      >Cost Price:</label
+                      >Cost Price: <span class="text-red-500">*</span></label
                     >
                     <input
                       type="number"
@@ -485,7 +382,7 @@
                     <label
                       for="stock_quantity"
                       class="block text-sm font-medium text-gray-300"
-                      >Stock Quantity:</label
+                      >Stock Quantity: <span class="text-red-500">*</span></label
                     >
                     <input
                       type="number"
@@ -508,7 +405,7 @@
                     <label
                       for="selling_price"
                       class="block text-sm font-medium text-gray-300"
-                      >Selling Price:</label
+                      >Selling Price: <span class="text-red-500">*</span></label
                     >
                     <input
                       type="text"
@@ -614,7 +511,7 @@ import {
   TransitionRoot,
 } from "@headlessui/vue";
 import { ref, computed, watch } from "vue";
-import { useForm } from "@inertiajs/vue3";
+import { useForm, usePage } from "@inertiajs/vue3";
 
 const emit = defineEmits(["update:open"]);
 
@@ -649,6 +546,13 @@ const { open, categories, colors, suppliers, sizes, selectedProduct } =
     },
   });
 
+// Local mutable lists so quick-add updates dropdowns instantly
+const localCategories = ref([...categories]);
+watch(() => categories, (val) => { localCategories.value = [...val]; }, { deep: true });
+
+const localSuppliers = ref([...suppliers]);
+watch(() => suppliers, (val) => { localSuppliers.value = [...val]; }, { deep: true });
+
 const form = useForm({
   category_id: "",
   supplier_id: "",
@@ -663,9 +567,6 @@ const form = useForm({
   stock_quantity: null,
   barcode: "",
   image: null, // For file upload
-  expire_date: null,
-  batch_no: "",
-  purchase_date: null,
 
 
 });
@@ -678,13 +579,13 @@ const sizeForm = useForm({
   sizeName: "",
 });
 
-const colorForm = useForm({
-  colorName: "",
-});
-
 const categoryForm = useForm({
   categoryName: "",
   parent_id: "",
+});
+
+const supplierForm = useForm({
+  name: "",
 });
 
 // Functions to handle dialog open/close
@@ -745,42 +646,65 @@ const submit = () => {
   });
 };
 
-const submitSize = () => {
-  sizeForm.post("/sizes", {
-    onSuccess: () => {
-      successMessage.value = "Size created successfully!";
-      sizeForm.sizeName = ""; // Clear the sizeName field
-      closeDialog();
-    },
-    onError: (errors) => {
-      console.error("Size form submission failed:", errors);
-    },
-  });
+const submitCategory = async () => {
+  if (!categoryForm.categoryName.trim()) return;
+  try {
+    const res = await fetch('/categories-quick', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        categoryName: categoryForm.categoryName,
+        parent_id: categoryForm.parent_id || null,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      categoryForm.errors.categoryName = data?.errors?.categoryName?.[0] ?? 'Failed to add category.';
+      return;
+    }
+    const newCategory = await res.json();
+    localCategories.value.push(newCategory);
+    form.category_id = newCategory.id;
+    successMessage.value = `Category "${newCategory.name}" added!`;
+    categoryForm.categoryName = '';
+    categoryForm.parent_id = '';
+    categoryForm.clearErrors();
+    closeDialog();
+  } catch (e) {
+    categoryForm.errors.categoryName = 'Network error. Please try again.';
+  }
 };
 
-const submitColor = () => {
-  colorForm.post("/colors", {
-    onSuccess: () => {
-      successMessage.value = "Color created successfully!";
-      colorForm.colorName = "";
-      closeDialog();
-    },
-    onError: (errors) => {
-      console.error("Color form submission failed:", errors);
-    },
-  });
-};
-
-const submitCategory = () => {
-  categoryForm.post("/categories", {
-    onSuccess: () => {
-      successMessage.value = "Category created successfully!";
-      categoryForm.categoryName = "";
-      closeDialog();
-    },
-    onError: (errors) => {
-      console.error("Category form submission failed:", errors);
-    },
-  });
+const submitSupplier = async () => {
+  if (!supplierForm.name.trim()) return;
+  try {
+    const res = await fetch('/suppliers-quick', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ name: supplierForm.name }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      supplierForm.errors.name = data?.errors?.name?.[0] ?? 'Failed to add supplier.';
+      return;
+    }
+    const newSupplier = await res.json();
+    localSuppliers.value.push(newSupplier);
+    form.supplier_id = newSupplier.id;
+    successMessage.value = `Supplier "${newSupplier.name}" added!`;
+    supplierForm.name = '';
+    supplierForm.clearErrors();
+    closeDialog();
+  } catch (e) {
+    supplierForm.errors.name = 'Network error. Please try again.';
+  }
 };
 </script>

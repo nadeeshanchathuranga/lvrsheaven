@@ -62,7 +62,7 @@ class Product extends Model
     }
 
     protected $casts = [
-        'expire_date' => 'date', // Cast expiry_date as a date
+        'expire_date' => 'date:Y-m-d', // Cast expiry_date as a date
     ];
 
       public function promotionItems()

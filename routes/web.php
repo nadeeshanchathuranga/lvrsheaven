@@ -19,6 +19,10 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\StockTransactionController;
 use App\Http\Controllers\TransactionHistoryController;
 use App\Http\Controllers\ManualPosController;
+use App\Http\Controllers\GrnController;
+use App\Http\Controllers\SupplierPaymentController;
+use App\Http\Controllers\GoodsReturnNoteController;
+use App\Http\Controllers\ShiftController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -66,9 +70,11 @@ Route::middleware([
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('categories', CategoryController::class);
+    Route::post('categories-quick', [CategoryController::class, 'quickStore'])->name('categories.quick');
     Route::resource('products', ProductController::class);
     Route::resource('suppliers', SupplierController::class);
     Route::post('suppliers/{supplier}', [SupplierController::class, 'update']);
+    Route::post('suppliers-quick', [SupplierController::class, 'quickStore'])->name('suppliers.quick');
     Route::post('products/{product}', [ProductController::class, 'update']);
     Route::post('products-variant', [ProductController::class, 'productVariantStore'])->name('productVariant');
 
@@ -115,8 +121,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('return-bill', ReturnItemController::class);
 
+    // GRN (Goods Received Note)
+    Route::resource('grn', GrnController::class)->only(['index', 'create', 'store', 'show']);
 
+    // Goods Return Note
+    Route::resource('goods-return-notes', GoodsReturnNoteController::class)->only(['index', 'create', 'store', 'show']);
 
+    // Supplier Payments
+    Route::get('/supplier-payments', [SupplierPaymentController::class, 'index'])->name('supplier-payments.index');
+    Route::post('/supplier-payments', [SupplierPaymentController::class, 'store'])->name('supplier-payments.store');
+    Route::delete('/supplier-payments/{supplierPayment}', [SupplierPaymentController::class, 'destroy'])->name('supplier-payments.destroy');
+
+    // Shift / Till Management
+    Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
+    Route::get('/shifts/open', [ShiftController::class, 'open'])->name('shifts.open');
+    Route::post('/shifts/start', [ShiftController::class, 'start'])->name('shifts.start');
+    Route::get('/shifts/{shift}/close', [ShiftController::class, 'closeForm'])->name('shifts.close.form');
+    Route::post('/shifts/{shift}/close', [ShiftController::class, 'close'])->name('shifts.close');
+    Route::get('/api/shifts/current', [ShiftController::class, 'current'])->name('shifts.current');
 
     Route::post('/api/products', [ProductController::class, 'fetchProducts']);
     Route::post('/api/sale/items', [ReturnItemController::class, 'fetchSaleItems'])->name('sale.items');
@@ -125,3 +147,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::get('/barcode/{id}', [CategoryController::class, 'showBarcode']);
+Route::get('/barcode-sticker/{id}', [CategoryController::class, 'barcodeStickerPrint'])->name('barcode.sticker')->middleware('auth');

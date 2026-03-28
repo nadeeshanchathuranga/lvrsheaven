@@ -1,4 +1,4 @@
-<style>
+﻿<style>
 /* General DataTables Pagination Container Style */
 .dataTables_wrapper .dataTables_paginate {
   display: flex;
@@ -6,24 +6,18 @@
   align-items: center;
   margin-top: 20px;
 }
-
-/* Style the filter container */
 #SupplierTable_filter {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  margin-bottom: 16px; /* Add spacing below the filter */
+  margin-bottom: 16px;
 }
-
-/* Style the label and input field inside the filter */
 #SupplierTable_filter label {
   font-size: 17px;
-  color: #000000; /* Match text color of the table header */
+  color: #000000;
   display: flex;
   align-items: center;
 }
-
-/* Style the input field */
 #SupplierTable_filter input[type="search"] {
   font-weight: 400;
   padding: 9px 15px;
@@ -36,231 +30,106 @@
   transition: all 0.5s ease;
 }
 #SupplierTable_filter input[type="search"]:focus {
-  outline: none; /* Removes the default outline */
+  outline: none;
   border: 1px solid #4b5563;
-  box-shadow: none; /* Removes any focus box-shadow */
+  box-shadow: none;
 }
-
-#SupplierTable_filter {
-  float: left;
-}
-
-.dataTables_wrapper {
-  margin-bottom: 10px;
-}
+#SupplierTable_filter { float: left; }
+.dataTables_wrapper { margin-bottom: 10px; }
 </style>
 
 <template>
   <Head title="Suppliers" />
   <Banner />
-  <div
-    class="flex flex-col items-center justify-start min-h-screen py-8 space-y-8 bg-gray-100 md:px-36 px-16"
-  >
-    <!-- Include the Header -->
+  <div class="flex flex-col items-center justify-start min-h-screen py-8 space-y-8 bg-gray-100 md:px-36 px-4">
     <Header />
-    <div class="w-full md:w-5/6 py-12 space-y-24">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center justify-center space-x-4"></div>
-        <p class="text-3xl italic font-bold text-black">
-          <span class="px-4 py-1 mr-3 text-white bg-black rounded-xl">
-            
-            {{ allsuppliers.length }}
-          </span>
-          <span class="text-xl">/ Total Suppliers</span>
-        </p>
-      </div>
-      <div class="flex md:flex-row flex-col w-full">
-        <div class="flex items-center w-full h-16 space-x-4 rounded-2xl">
+    <div class="w-full md:w-5/6 py-6 space-y-8">
+
+      <!-- Title Row -->
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
           <Link href="/">
             <img src="/images/back-arrow.png" class="w-14 h-14" />
           </Link>
-          <p class="text-4xl font-bold tracking-wide text-black uppercase">
-            Suppliers
-          </p>
+          <p class="text-4xl font-bold tracking-wide text-black uppercase">Suppliers</p>
         </div>
-        
-        <div class="flex justify-end w-full">
-          <!-- <p
-
-              @click="() => { playClickSound(); isCreateModalOpen = true; }"
-            class="px-12 py-4 text-2xl font-bold tracking-wider text-white uppercase bg-blue-600 cursor-pointer rounded-xl"
+        <div class="flex gap-3 flex-wrap">
+          <Link href="/grn" class="px-6 py-3 text-lg font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 transition">
+            <i class="ri-file-list-3-line pr-2"></i> GRN
+          </Link>
+          <button
+            @click="() => { if (HasRole([`Admin`])) isCreateModalOpen = true; }"
+            :class="HasRole([`Admin`]) ? `px-6 py-3 text-lg font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition cursor-pointer` : `px-6 py-3 text-lg font-bold text-white bg-blue-400 rounded-xl cursor-not-allowed`"
+            :disabled="!HasRole([`Admin`])"
           >
-            <i class="pr-4 ri-add-circle-fill"></i> Add More Suppliers
-          </p> -->
-
-          <!-- <p
-            v-if="HasRole(['Admin'])"
-            @click="
-              () => {
-                isCreateModalOpen = true;
-              }
-            "
-            class="px-12 py-4 text-2xl font-bold tracking-wider text-white uppercase bg-blue-600 rounded rounded-xl"
-          >
-            <i class="pr-4 ri-add-circle-fill"></i> Add More Suppliers
-          </p> -->
-
-          <p
-            @click="
-              () => {
-                if (HasRole(['Admin'])) {
-                  isCreateModalOpen = true;
-                }
-              }
-            "
-            :class="
-              HasRole(['Admin'])
-                ? 'md:px-12 py-4 px-4 md:text-2xl font-bold tracking-wider text-white uppercase bg-blue-600 rounded-xl'
-                : 'md:px-12 py-4 px-4 md:text-2xl font-bold tracking-wider text-white uppercase bg-blue-600 cursor-not-allowed rounded-xl'
-            "
-            :title="
-              HasRole(['Admin'])
-                ? ''
-                : 'You do not have permission to add more Color'
-            "
-          >
-            <i class="md:pr-4 ri-add-circle-fill"></i> Add More Suppliers
-          </p>
+            <i class="ri-add-circle-fill pr-2"></i> Add Supplier
+          </button>
         </div>
       </div>
+
+      <!-- Summary Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl shadow p-4 border-l-4 border-blue-500">
+          <p class="text-xs text-gray-400 uppercase font-semibold">Total Suppliers</p>
+          <p class="text-2xl font-bold text-gray-800 mt-1">{{ allsuppliers.length }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-4 border-l-4 border-purple-500">
+          <p class="text-xs text-gray-400 uppercase font-semibold">Total Purchases</p>
+          <p class="text-2xl font-bold text-gray-800 mt-1">{{ formatCurrency(totalPurchases) }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-4 border-l-4 border-green-500">
+          <p class="text-xs text-gray-400 uppercase font-semibold">Total Paid</p>
+          <p class="text-2xl font-bold text-green-700 mt-1">{{ formatCurrency(totalPaid) }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-4 border-l-4 border-red-500">
+          <p class="text-xs text-gray-400 uppercase font-semibold">Total Outstanding</p>
+          <p class="text-2xl font-bold text-red-600 mt-1">{{ formatCurrency(totalOutstanding) }}</p>
+        </div>
+      </div>
+
       <template v-if="allsuppliers && allsuppliers.length > 0">
         <div class="overflow-x-auto">
-          <table
-            id="SupplierTable"
-            class="w-full text-gray-700 bg-white border border-gray-300 rounded-lg shadow-md table-auto"
-          >
+          <table id="SupplierTable" class="w-full text-gray-700 bg-white border border-gray-300 rounded-lg shadow-md table-auto">
             <thead>
-              <tr
-                class="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-[16px] text-white border-b border-blue-700"
-              >
-                <th class="p-4 font-semibold tracking-wide text-left uppercase">
-                  Name
-                </th>
-                <th class="p-4 font-semibold tracking-wide text-left uppercase">
-                  Contact
-                </th>
-                <th class="p-4 font-semibold tracking-wide text-left uppercase">
-                  Image
-                </th>
-                <th class="p-4 font-semibold tracking-wide text-left uppercase">
-                  Email
-                </th>
-
-                <th class="p-4 font-semibold tracking-wide text-left uppercase">
-                  Address
-                </th>
-                <th
-                  class="p-4 font-semibold tracking-wide text-center uppercase"
-                >
-                  Actions
-                </th>
+              <tr class="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-[13px] text-white border-b border-blue-700">
+                <th class="p-4 font-semibold tracking-wide text-left uppercase">Name</th>
+                <th class="p-4 font-semibold tracking-wide text-left uppercase">Contact</th>
+                <th class="p-4 font-semibold tracking-wide text-left uppercase">Image</th>
+                <th class="p-4 font-semibold tracking-wide text-left uppercase">Email</th>
+                <th class="p-4 font-semibold tracking-wide text-left uppercase">Address</th>
+                <th class="p-4 font-semibold tracking-wide text-right uppercase">Total Purchases</th>
+                <th class="p-4 font-semibold tracking-wide text-right uppercase">Total Paid</th>
+                <th class="p-4 font-semibold tracking-wide text-right uppercase">Outstanding</th>
+                <th class="p-4 font-semibold tracking-wide text-center uppercase">Actions</th>
               </tr>
             </thead>
             <tbody class="text-[13px] font-normal">
-              <tr
-                v-for="supplier in allsuppliers"
-                :key="supplier.id"
-                class="transition duration-200 ease-in-out hover:bg-gray-200 hover:shadow-lg"
-              >
-                <td class="p-4 font-bold border-t border-gray-200">
-                  {{ supplier.name || "N/A" }}
-                </td>
+              <tr v-for="supplier in allsuppliers" :key="supplier.id" class="transition duration-200 ease-in-out hover:bg-gray-50 hover:shadow-lg">
+                <td class="p-4 font-bold border-t border-gray-200">{{ supplier.name || "N/A" }}</td>
+                <td class="p-4 border-t border-gray-200">{{ supplier.contact || "N/A" }}</td>
                 <td class="p-4 border-t border-gray-200">
-                  {{ supplier.contact || "N/A" }}
+                  <img :src="supplier.image ? `/${supplier.image}` : `/images/placeholder.jpg`" alt="Supplier Image" class="object-cover rounded-md shadow h-12 w-12" />
                 </td>
-                <td class="p-4 border-t border-gray-200">
-                  <!-- <img
-                    v-if="supplier.image"
-                    :src="supplier.image"
-                    alt="Supplier Image"
-                    class="object-cover rounded-md shadow h-15 w-15"
-                  />
-                  <span v-else class="text-gray-500">N/A</span> -->
-
-                  <img
-                    :src="
-                      supplier.image
-                        ? `/${supplier.image}`
-                        : '/images/placeholder.jpg'
-                    "
-                    alt="Supplier Image"
-                    class="object-cover rounded-md shadow h-15 w-15"
-                  />
-                </td>
-                <td class="p-4 border-t border-gray-200">
-                  {{ supplier.email || "N/A" }}
-                </td>
-                <td class="p-4 border-t border-gray-200">
-                  {{ supplier.address || "N/A" }}
+                <td class="p-4 border-t border-gray-200">{{ supplier.email || "N/A" }}</td>
+                <td class="p-4 border-t border-gray-200">{{ supplier.address || "N/A" }}</td>
+                <td class="p-4 border-t border-gray-200 text-right font-semibold text-gray-700">{{ formatCurrency(supplier.total_purchases ?? 0) }}</td>
+                <td class="p-4 border-t border-gray-200 text-right font-semibold text-green-700">{{ formatCurrency(supplier.total_paid ?? 0) }}</td>
+                <td class="p-4 border-t border-gray-200 text-right font-bold" :class="(supplier.outstanding ?? 0) > 0 ? `text-red-600` : `text-green-600`">
+                  {{ formatCurrency(supplier.outstanding ?? 0) }}
                 </td>
                 <td class="p-4 text-center border-t border-gray-200">
-                  <div class="inline-flex items-center w-full space-x-3">
-                    <!-- <button
-                      v-if="HasRole(['Admin'])"
-                      @click="
-                        () => {
-                          openEditModal(supplier);
-                        }
-                      "
-                      class="w-full px-4 py-2 font-medium text-[14px] tracking-wider text-white bg-gradient-to-r from-green-500 to-green-400 transition duration-150 ease-in-out rounded-md hover:from-green-600 hover:to-green-500"
-                    >
-                      Edit
-                    </button>
+                  <div class="inline-flex items-center space-x-2">
+                    <Link :href="`/grn?supplier_id=${supplier.id}`" class="px-3 py-1 bg-green-500 text-white rounded-lg text-xs hover:bg-green-600 transition">GRNs</Link>
                     <button
-                      v-if="HasRole(['Admin'])"
-                      @click="
-                        () => {
-                          openDeleteModal(supplier);
-                        }
-                      "
-                      class="w-full px-4 py-2 font-medium text-[14px] tracking-wider text-white bg-gradient-to-r from-red-500 to-red-400 transition duration-150 ease-in-out rounded-md hover:from-red-600 hover:to-red-500"
-                    >
-                      Delete
-                    </button> -->
-
-                    <!-- Edit Button -->
+                      :class="HasRole([`Admin`]) ? `px-3 py-1 bg-blue-500 text-white rounded-lg text-xs` : `px-3 py-1 bg-blue-300 text-white rounded-lg text-xs cursor-not-allowed`"
+                      :disabled="!HasRole([`Admin`])"
+                      @click="() => { if (HasRole([`Admin`])) openEditModal(supplier); }"
+                    >Edit</button>
                     <button
-                      :class="
-                        HasRole(['Admin'])
-                          ? 'px-4 py-2 bg-green-500 text-white rounded-lg'
-                          : 'px-4 py-2 bg-green-400 text-white rounded-lg cursor-not-allowed'
-                      "
-                      :title="
-                        HasRole(['Admin'])
-                          ? ''
-                          : 'You do not have permission to edit'
-                      "
-                      :disabled="!HasRole(['Admin'])"
-                      @click="
-                        () => {
-                          if (HasRole(['Admin'])) openEditModal(supplier);
-                        }
-                      "
-                    >
-                      Edit
-                    </button>
-
-                    <!-- Delete Button -->
-                    <button
-                      :class="
-                        HasRole(['Admin'])
-                          ? 'px-4 py-2 bg-red-500 text-white rounded-lg ml-2'
-                          : 'px-4 py-2 bg-red-400 text-white rounded-lg cursor-not-allowed ml-2'
-                      "
-                      :title="
-                        HasRole(['Admin'])
-                          ? ''
-                          : 'You do not have permission to delete'
-                      "
-                      :disabled="!HasRole(['Admin'])"
-                      @click="
-                        () => {
-                          if (HasRole(['Admin'])) openDeleteModal(supplier);
-                        }
-                      "
-                    >
-                      Delete
-                    </button>
+                      :class="HasRole([`Admin`]) ? `px-3 py-1 bg-red-500 text-white rounded-lg text-xs` : `px-3 py-1 bg-red-300 text-white rounded-lg text-xs cursor-not-allowed`"
+                      :disabled="!HasRole([`Admin`])"
+                      @click="() => { if (HasRole([`Admin`])) openDeleteModal(supplier); }"
+                    >Delete</button>
                   </div>
                 </td>
               </tr>
@@ -269,39 +138,21 @@
         </div>
       </template>
       <template v-else>
-        <div class="col-span-4 text-center text-blue-500">
-          <p class="text-center text-red-500 text-[17px]">
-            No Suppliers Available
-          </p>
+        <div class="col-span-4 text-center">
+          <p class="text-center text-red-500 text-[17px]">No Suppliers Available</p>
         </div>
       </template>
     </div>
   </div>
-  <!-- Modal Components -->
-  <SupplierCreateModel
-    :suppliers="allsuppliers"
-    v-model:open="isCreateModalOpen"
-  />
-  <SupplierDeleteModel
-    :suppliers="allsuppliers"
-    :selected-supplier="selectedSupplier"
-    v-model:open="isDeleteModalOpen"
-  />
-
-  <SupplierUpdateModel
-    :suppliers="allsuppliers"
-    v-model:open="isEditModalOpen"
-    :selected-supplier="selectedSupplier"
-  />
-
+  <SupplierCreateModel :suppliers="allsuppliers" v-model:open="isCreateModalOpen" />
+  <SupplierDeleteModel :suppliers="allsuppliers" :selected-supplier="selectedSupplier" v-model:open="isDeleteModalOpen" />
+  <SupplierUpdateModel :suppliers="allsuppliers" v-model:open="isEditModalOpen" :selected-supplier="selectedSupplier" />
   <Footer />
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useForm } from "@inertiajs/vue3";
-import { Link } from "@inertiajs/vue3";
-import { Head } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import { Link, Head } from "@inertiajs/vue3";
 import Header from "@/Components/custom/Header.vue";
 import Footer from "@/Components/custom/Footer.vue";
 import SupplierCreateModel from "@/Components/custom/SupplierCreateModel.vue";
@@ -310,52 +161,44 @@ import SupplierUpdateModel from "@/Components/custom/SupplierUpdateModel.vue";
 import Banner from "@/Components/Banner.vue";
 import { HasRole } from "@/Utils/Permissions";
 
-defineProps({
-  allsuppliers: Array, // Array of suppliers
-  totalSuppliers: Number, // Total count of suppliers
+const props = defineProps({
+  allsuppliers: Array,
+  totalSuppliers: Number,
 });
 
-const openEditModal = (supplier) => {
-  console.log("Opening edit modal for supplier:", supplier);
-  selectedSupplier.value = supplier;
-  isEditModalOpen.value = true;
-};
+const totalPurchases = computed(() => props.allsuppliers.reduce((sum, s) => sum + (s.total_purchases ?? 0), 0));
+const totalPaid = computed(() => props.allsuppliers.reduce((sum, s) => sum + (s.total_paid ?? 0), 0));
+const totalOutstanding = computed(() => props.allsuppliers.reduce((sum, s) => sum + (s.outstanding ?? 0), 0));
 
-const openDeleteModal = (supplier) => {
-  selectedSupplier.value = supplier;
-  isDeleteModalOpen.value = true;
-};
-
-const form = useForm({});
+const formatCurrency = (val) =>
+  'Rs. ' + parseFloat(val ?? 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
 
 const isCreateModalOpen = ref(false);
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedSupplier = ref(null);
 
+const openEditModal = (supplier) => {
+  selectedSupplier.value = supplier;
+  isEditModalOpen.value = true;
+};
+const openDeleteModal = (supplier) => {
+  selectedSupplier.value = supplier;
+  isDeleteModalOpen.value = true;
+};
+
 $(document).ready(function () {
-  let table = $("#SupplierTable").DataTable({
+  $("#SupplierTable").DataTable({
     dom: "Bfrtip",
     pageLength: 10,
     buttons: [],
-    columnDefs: [
-      // Adjust targets if needed, e.g., skip "Actions" column
-      {
-        targets: [1, 2, 3, 5], // Adjust this based on the current column index of "Image" or other columns
-        searchable: false,
-        orderable: false,
-      },
-    ],
+    columnDefs: [{ targets: [2, 5, 6, 7, 8], searchable: false, orderable: false }],
     initComplete: function () {
       let searchInput = $("div.dataTables_filter input");
       searchInput.attr("placeholder", "Search ...");
       searchInput.off("keyup");
-      searchInput.on("keypress", function (e) {});
     },
-    language: {
-      search: "",
-    },
+    language: { search: "" },
   });
 });
 </script>
-

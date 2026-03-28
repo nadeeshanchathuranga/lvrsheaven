@@ -45,42 +45,20 @@
             <form @submit.prevent="submit">
               <!-- Modal Form -->
               <div class="mt-6 space-y-4 text-left">
-                <div class="flex items-center gap-8 mt-6">
-                  <!-- Selling Price input -->
-                  <div class="w-full">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-300"
-                        >Product Name:</label
-                      >
-                      <input
-                        v-model="form.name"
-                        type="text"
-                        id="name"
-                        required
-                        class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                      />
-                      <span v-if="form.errors.name" class="mt-4 text-red-500">{{
-                        form.errors.name
-                      }}</span>
-                    </div>
-                  </div>
-                  <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-300"
-                      >Batch No:</label
-                    >
-                    <input
-                      v-model="form.batch_no"
-                      type="text"
-                      id="batch_no"
-                      class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                    />
-                    <span
-                      v-if="form.errors.batch_no"
-                      class="mt-4 text-red-500"
-                      >{{ form.errors.batch_no }}</span
-                    >
-                  </div>
-                  <!-- Cost Price input -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-300"
+                    >Product Name: <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    v-model="form.name"
+                    type="text"
+                    id="name"
+                    required
+                    class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                  />
+                  <span v-if="form.errors.name" class="mt-4 text-red-500">{{
+                    form.errors.name
+                  }}</span>
                 </div>
 
 
@@ -109,7 +87,7 @@
                     <!-- Category Name -->
                     <div>
                       <label class="block text-sm font-medium text-gray-300"
-                        >Category Name:</label
+                        >Category Name: <span class="text-red-500">*</span></label
                       >
                       <select
                         required
@@ -140,43 +118,7 @@
                   </div>
                 </div>
 
-                 <div class="flex items-center gap-8 mt-6">
-                  <!-- Selling Price input -->
-                  <div class="w-full">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-300"
-                        >Purchase Date:</label
-                      >
-                      <input
-                        v-model="form.purchase_date"
-                        type="date"
-                        id="purchase_date"
-                         
-                        class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                      />
-                      <span v-if="form.errors.purchase_date" class="mt-4 text-red-500">{{
-                        form.errors.purchase_date
-                      }}</span>
-                    </div>
-                  </div>
-                  <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-300"
-                      >Expire Date:</label
-                    >
-                    <input
-                      v-model="form.expire_date"
-                      type="date"
-                      id="expire_date"
-                      class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                    />
-                    <span
-                      v-if="form.errors.expire_date"
-                      class="mt-4 text-red-500"
-                      >{{ form.errors.expire_date }}</span
-                    >
-                  </div>
-                  <!-- Cost Price input -->
-                </div>
+
 
                 <div>
                   <div class="flex items-center gap-8">
@@ -246,7 +188,7 @@
                     <label
                       for="cost_price"
                       class="block text-sm font-medium text-gray-300"
-                      >Cost Price:</label
+                      >Cost Price: <span class="text-red-500">*</span></label
                     >
                     <input
                       type="number"
@@ -270,7 +212,7 @@
                     <label
                       for="selling_price"
                       class="block text-sm font-medium text-gray-300"
-                      >Selling Price:</label
+                      >Selling Price: <span class="text-red-500">*</span></label
                     >
                     <input
                       type="text"
@@ -352,15 +294,10 @@
                       class="block text-sm font-medium text-gray-300"
                       >Stock Quantity:</label
                     >
-
-                    <input
-                      type="number"
-                      id="stock_quantity"
-                      v-model="form.stock_quantity"
-                      class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                      placeholder="Stock quantity"
-                      required
-                    />
+                    <div class="w-full px-4 py-2 mt-2 text-gray-400 bg-gray-700 rounded-md border border-gray-600 cursor-not-allowed">
+                      {{ form.stock_quantity ?? 0 }}
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Stock is managed via GRN / Goods Return. Use a GRN to receive new stock.</p>
                   </div>
 
                   <div class="w-full">
@@ -390,25 +327,7 @@
                   </div>
                 </div>
 
-                <div class="flex items-center gap-8 mt-6" v-if="isPharma">
-                  <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-300"
-                      >Expire Date:</label
-                    >
-                    <input
-                      v-model="form.expire_date"
-                      type="date"
-                      id="barcode"
-                      placeholder="Enter Barcode"
-                      class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                    />
-                    <span
-                      v-if="form.errors.expire_date"
-                      class="mt-4 text-red-500"
-                      >{{ form.errors.expire_date }}</span
-                    >
-                  </div>
-                </div>
+
 
                 <div class="flex items-center gap-8 mt-6">
                   <div class="w-full">
@@ -550,9 +469,6 @@ const form = useForm({
   discounted_price: null,
   barcode: "",
   image: null,
-  expire_date: null,
-  batch_no: "",
-  purchase_date: null,
 });
 
 // Handle file upload for images
@@ -639,14 +555,7 @@ watch(
       form.selling_price = newValue.selling_price || null;
       form.discounted_price = newValue.discounted_price || null;
       form.barcode = newValue.barcode || "";
-      form.batch_no = newValue.batch_no || "";
       form.image = newValue.image || null;
-      form.expire_date = newValue.expire_date
-        ? new Date(newValue.expire_date).toISOString().split("T")[0]
-        : null;
-      form.purchase_date = newValue.purchase_date
-        ? new Date(newValue.purchase_date).toISOString().split("T")[0]
-        : null;
     }
   },
   { immediate: true }

@@ -268,6 +268,14 @@
 
                 <div class="flex space-x-4">
                   <button
+                    @click="openBarcodeQty(product)"
+                    class="flex items-center justify-center w-10 h-10 text-gray-800 transition duration-200 bg-gray-100 rounded-full cursor-pointer hover:bg-purple-600 hover:text-white"
+                    title="Print Barcode Stickers"
+                  >
+                    <i class="ri-barcode-line"></i>
+                  </button>
+
+                  <button
                     :disabled="!HasRole(['Admin'])"
                     @click="
                       () => {
@@ -381,6 +389,46 @@
     </div>
   </div>
 
+  <!-- Barcode Qty Picker Modal -->
+  <div
+    v-if="barcodeQtyProduct"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
+    @click.self="barcodeQtyProduct = null"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-80 text-center space-y-4">
+      <div class="text-4xl">🖨</div>
+      <h2 class="text-lg font-bold text-gray-800">Print Barcode Stickers</h2>
+      <p class="text-sm text-gray-500 truncate">{{ barcodeQtyProduct.name }}</p>
+      <p class="text-xs text-gray-400">30 mm × 16 mm · 3-column sticker roll</p>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Number of stickers</label>
+        <input
+          v-model.number="barcodeQty"
+          type="number"
+          min="1"
+          max="500"
+          class="w-full border-2 border-gray-300 rounded-xl px-4 py-2 text-lg font-bold text-center focus:outline-none focus:border-purple-500"
+        />
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button
+          @click="barcodeQtyProduct = null"
+          class="flex-1 border-2 border-gray-300 text-gray-600 font-semibold py-2 rounded-xl hover:bg-gray-100 transition"
+        >
+          Cancel
+        </button>
+        <button
+          @click="printBarcodes"
+          class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-xl transition"
+        >
+          Print
+        </button>
+      </div>
+    </div>
+  </div>
+
   <ProductCreateModel
     :categories="allcategories"
     :colors="colors"
@@ -444,6 +492,8 @@ const isDuplicateModalOpen = ref(false);
 const isViewModalOpen = ref(false);
 const selectedProduct = ref(null);
 const isDeleteModalOpen = ref(false);
+const barcodeQtyProduct = ref(null);   // product awaiting qty input
+const barcodeQty = ref(1);             // qty for sticker print
 
 const emit = defineEmits(["update:open"]);
 
@@ -532,6 +582,17 @@ const deleteProduct = (id) => {
     },
   });
 };
+const openBarcodeQty = (product) => {
+  barcodeQtyProduct.value = product;
+  barcodeQty.value = 1;
+};
+const printBarcodes = () => {
+  if (!barcodeQtyProduct.value) return;
+  const qty = Math.max(1, parseInt(barcodeQty.value) || 1);
+  window.open(`/barcode-sticker/${barcodeQtyProduct.value.id}?qty=${qty}`, '_blank');
+  barcodeQtyProduct.value = null;
+};
+
 const navigateTo = (url) => {
   if (!url) return; // Avoid null or undefined URLs
 

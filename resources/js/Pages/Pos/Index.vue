@@ -23,6 +23,18 @@
                     <p class="text-3xl text-black cursor-pointer">
                         <i @click="refreshData" class="ri-restart-line"></i>
                     </p>
+                    <!-- Shift badge + close button -->
+                    <div v-if="activeShift" class="flex items-center gap-3">
+                        <div class="bg-green-100 border border-green-400 rounded-xl px-4 py-2 text-sm font-semibold text-green-700 whitespace-nowrap">
+                            🟢 {{ activeShift.shift_number }}
+                        </div>
+                        <Link
+                            :href="`/shifts/${activeShift.id}/close`"
+                            class="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition whitespace-nowrap"
+                        >
+                            Close Shift
+                        </Link>
+                    </div>
                 </div>
             </div>
             <div class="flex md:flex-row flex-col w-full gap-4">
@@ -400,11 +412,12 @@ const handleModalOpenUpdate = (newValue) => {
 };
 
 const props = defineProps({
-    loggedInUser: Object, // Using backend product name to avoid messing with selected products
+    loggedInUser: Object,
     allcategories: Array,
     allemployee: Array,
     colors: Array,
     sizes: Array,
+    activeShift: Object,
 });
 
 const discount = ref(0);

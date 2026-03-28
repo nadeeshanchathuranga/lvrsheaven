@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 use Carbon\Carbon;
+use App\Models\Grn;
+use App\Models\GoodsReturnNote;
 use App\Models\Product;
 use App\Models\Report;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Shift;
 use App\Models\StockTransaction;
 use DateTime;
 use Illuminate\Http\Request;
@@ -136,10 +139,59 @@ class ReportController extends Controller
     // Distinct customers (same filter)
     $totalCustomer = (clone $salesQuery)->distinct('customer_id')->count('customer_id');
 
+    // ---- GRN Summary (filter by grn_date) ----
+    $grnQuery = Grn::query();
+    if ($from && $to) {
+        $grnQuery->whereBetween('grn_date', [$from->toDateString(), $to->toDateString()]);
+    } elseif ($from) {
+        $grnQuery->where('grn_date', '>=', $from->toDateString());
+    } elseif ($to) {
+        $grnQuery->where('grn_date', '<=', $to->toDateString());
+    }
+    $grns = $grnQuery->get();
+    $grnSummary = [
+        'total_grns'           => $grns->count(),
+        'total_received_value' => (float) $grns->sum('total_amount'),
+        'total_paid'           => (float) $grns->sum('paid_amount'),
+        'total_outstanding'    => (float) $grns->sum('total_amount') - (float) $grns->sum('paid_amount'),
+    ];
 
+    // ---- Goods Return Summary (filter by return_date) ----
+    $returnQuery = GoodsReturnNote::query();
+    if ($from && $to) {
+        $returnQuery->whereBetween('return_date', [$from->toDateString(), $to->toDateString()]);
+    } elseif ($from) {
+        $returnQuery->where('return_date', '>=', $from->toDateString());
+    } elseif ($to) {
+        $returnQuery->where('return_date', '<=', $to->toDateString());
+    }
+    $returnNotes = $returnQuery->get();
+    $returnSummary = [
+        'total_returns'      => $returnNotes->count(),
+        'total_return_value' => (float) $returnNotes->sum('total_amount'),
+    ];
 
-
-
+    // ---- Shift Summary (filter by start_time) ----
+    $shiftQuery = Shift::with('user');
+    if ($from && $to) {
+        $shiftQuery->whereBetween('start_time', [$from, $to]);
+    } elseif ($from) {
+        $shiftQuery->where('start_time', '>=', $from);
+    } elseif ($to) {
+        $shiftQuery->where('start_time', '<=', $to);
+    }
+    $shiftSummary = $shiftQuery->orderByDesc('start_time')->get()->map(function ($shift) {
+        return [
+            'shift_number'  => $shift->shift_number,
+            'cashier'       => $shift->user->name ?? 'N/A',
+            'status'        => $shift->status,
+            'start_time'    => $shift->start_time?->format('Y-m-d H:i'),
+            'end_time'      => $shift->end_time?->format('Y-m-d H:i'),
+            'opening_float' => (float) $shift->opening_float,
+            'closing_float' => (float) $shift->closing_float,
+            'total_sales'   => (float) $shift->total_sales,
+        ];
+    })->toArray();
 
     return Inertia::render('Reports/Index', [
         'products'                  => $products,
@@ -159,6 +211,10 @@ class ReportController extends Controller
         'categorySales'             => $categorySales,
         'employeeSalesSummary'      => $employeeSalesSummary,
         'paymentMethodTotals'       => $paymentMethodTotals,
+
+        'grnSummary'                => $grnSummary,
+        'returnSummary'             => $returnSummary,
+        'shiftSummary'              => $shiftSummary,
 
       
     ]);

@@ -16,6 +16,14 @@ class CategoryController extends Controller
 
         return view('barcode', compact('product'));
     }
+
+    public function barcodeStickerPrint(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $qty     = max(1, (int) $request->query('qty', 1));
+
+        return view('barcode-sticker', compact('product', 'qty'));
+    }
     public function index()
     {
         if (!Gate::allows('hasRole', ['Admin', 'Manager'])) {
@@ -117,6 +125,29 @@ class CategoryController extends Controller
         }
 
         return redirect()->back()->withErrors(['error' => 'Invalid data provided.']);
+    }
+
+    public function quickStore(Request $request)
+    {
+        if (!Gate::allows('hasRole', ['Admin', 'Manager'])) {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'categoryName' => 'required|string|max:191|unique:categories,name',
+            'parent_id'    => 'nullable|exists:categories,id',
+        ]);
+
+        $category = Category::create([
+            'name'      => $validated['categoryName'],
+            'parent_id' => $validated['parent_id'] ?? null,
+        ]);
+
+        return response()->json([
+            'id'               => $category->id,
+            'name'             => $category->name,
+            'hierarchy_string' => null,
+        ]);
     }
 
 

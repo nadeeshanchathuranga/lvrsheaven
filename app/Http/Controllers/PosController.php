@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Shift;
 use App\Models\Size;
 use App\Models\StockTransaction;
 use App\Models\Employee;
@@ -26,24 +27,34 @@ class PosController extends Controller
             abort(403, 'Unauthorized');
         }
 
+        // Require an open shift before using POS
+        $activeShift = Shift::where('user_id', Auth::id())
+            ->where('status', 'open')
+            ->latest()
+            ->first();
+
+        if (!$activeShift) {
+            return redirect()->route('shifts.open')
+                ->dangerBanner('You must open a shift before using the POS.');
+        }
+
         $allcategories = Category::with('parent')->get()->map(function ($category) {
-            $category->hierarchy_string = $category->hierarchy_string; // Access it
+            $category->hierarchy_string = $category->hierarchy_string;
             return $category;
         });
         $colors = Color::orderBy('created_at', 'desc')->get();
         $sizes = Size::orderBy('created_at', 'desc')->get();
         $allemployee = Employee::orderBy('created_at', 'desc')->get();
 
-
-        // Render the page for GET requests
         return Inertia::render('Pos/Index', [
-            'product' => null,
-            'error' => null,
+            'product'      => null,
+            'error'        => null,
             'loggedInUser' => Auth::user(),
             'allcategories' => $allcategories,
-            'allemployee' => $allemployee,
-            'colors' => $colors,
-            'sizes' => $sizes,
+            'allemployee'  => $allemployee,
+            'colors'       => $colors,
+            'sizes'        => $sizes,
+            'activeShift'  => $activeShift,
         ]);
     }
 
