@@ -13,18 +13,63 @@
           </Link>
           <p class="text-5xl font-bold tracking-wide text-black uppercase">New GRN (Goods Received Note)</p>
         </div>
-        <button
-          v-if="form.items.length > 0 || form.supplier_id || form.reference_no || form.notes"
-          @click="clearDraft"
-          type="button"
-          class="px-5 py-2 bg-red-100 text-red-600 border border-red-300 rounded-xl font-semibold text-base hover:bg-red-200 transition"
-        >Clear Draft</button>
+        <div class="flex items-center gap-3">
+          <!-- Pause GRN -->
+          <button
+            v-if="form.items.length > 0"
+            @click="pauseGrn"
+            type="button"
+            class="px-5 py-2 bg-orange-500 text-white border border-orange-600 rounded-xl font-semibold text-base hover:bg-orange-600 transition"
+          >⏸ Pause GRN</button>
+          <!-- Clear form -->
+          <button
+            v-if="form.items.length > 0 || form.supplier_id || form.reference_no || form.notes"
+            @click="clearDraft"
+            type="button"
+            class="px-5 py-2 bg-red-100 text-red-600 border border-red-300 rounded-xl font-semibold text-base hover:bg-red-200 transition"
+          >Clear Draft</button>
+        </div>
       </div>
 
       <!-- Draft restored notice -->
       <div v-if="draftRestored" class="flex items-center justify-between bg-yellow-50 border border-yellow-300 rounded-xl px-5 py-3 text-yellow-800 text-base font-medium">
         <span>⚠️ Your previous unsaved draft has been restored ({{ form.items.length }} item{{ form.items.length === 1 ? '' : 's' }}).</span>
         <button @click="draftRestored = false" class="text-yellow-600 hover:text-yellow-800 font-bold text-lg leading-none ml-4">✕</button>
+      </div>
+
+      <!-- Saved / Paused Drafts -->
+      <div v-if="pausedDrafts.length > 0" class="bg-white rounded-2xl shadow-lg p-6">
+        <h3 class="text-xl font-bold text-gray-700 mb-4">📋 Saved (Paused) GRN Drafts</h3>
+        <div class="space-y-3">
+          <div
+            v-for="draft in pausedDrafts"
+            :key="draft.id"
+            class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-xl px-5 py-4"
+          >
+            <div>
+              <p class="font-bold text-gray-800 text-lg">
+                {{ draft.label }}
+              </p>
+              <p class="text-sm text-gray-500 mt-1">
+                {{ draft.item_count }} item{{ draft.item_count === 1 ? '' : 's' }} &nbsp;·&nbsp;
+                Grand Total: Rs. {{ draft.grand_total.toLocaleString('en-LK', { minimumFractionDigits: 2 }) }} &nbsp;·&nbsp;
+                Paused {{ formatPausedAt(draft.paused_at) }}
+              </p>
+            </div>
+            <div class="flex gap-3 ml-6">
+              <button
+                @click="resumeDraft(draft)"
+                type="button"
+                class="px-5 py-2 bg-green-600 text-white rounded-xl font-semibold text-base hover:bg-green-700 transition"
+              >▶ Resume</button>
+              <button
+                @click="deletePausedDraft(draft.id)"
+                type="button"
+                class="px-5 py-2 bg-red-100 text-red-600 border border-red-300 rounded-xl font-semibold text-base hover:bg-red-200 transition"
+              >Delete</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Form -->
@@ -311,18 +356,26 @@
         <p v-if="errors.items" class="text-red-500 text-lg">{{ errors.items }}</p>
 
         <!-- Action Buttons -->
-        <div class="flex justify-end gap-4 pt-4">
-          <Link href="/grn" class="px-10 py-4 bg-gray-200 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-300 transition">
-            Cancel
-          </Link>
+        <div class="flex justify-between gap-4 pt-4">
           <button
-            @click="submit"
-            :disabled="submitting"
-            class="px-12 py-4 bg-blue-600 text-white rounded-xl font-bold text-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span v-if="submitting">Saving GRN...</span>
-            <span v-else">Save GRN</span>
-          </button>
+            v-if="form.items.length > 0"
+            @click="pauseGrn"
+            type="button"
+            class="px-8 py-4 bg-orange-500 text-white rounded-xl font-bold text-lg hover:bg-orange-600 transition"
+          >⏸ Pause &amp; Continue Later</button>
+          <div class="flex gap-4 ml-auto">
+            <Link href="/grn" class="px-10 py-4 bg-gray-200 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-300 transition">
+              Cancel
+            </Link>
+            <button
+              @click="submit"
+              :disabled="submitting"
+              class="px-12 py-4 bg-blue-600 text-white rounded-xl font-bold text-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span v-if="submitting">Saving GRN...</span>
+              <span v-else>Save GRN</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -348,8 +401,22 @@ const errors = computed(() => page.props.errors ?? {});
 
 const today = new Date().toISOString().slice(0, 10);
 
-const DRAFT_KEY = 'grn_create_draft';
-const draftRestored = ref(false);
+const DRAFT_KEY        = 'grn_create_draft';
+const PAUSED_DRAFTS_KEY = 'grn_paused_drafts';
+
+const draftRestored  = ref(false);
+const resumedFromId  = ref(null);
+const pausedDrafts   = ref([]);
+
+// ── Load paused drafts list ──
+try {
+  const list = localStorage.getItem(PAUSED_DRAFTS_KEY);
+  if (list) pausedDrafts.value = JSON.parse(list);
+} catch (e) {}
+
+const savePausedList = () => {
+  localStorage.setItem(PAUSED_DRAFTS_KEY, JSON.stringify(pausedDrafts.value));
+};
 
 const form = reactive({
   supplier_id: '',
@@ -359,7 +426,7 @@ const form = reactive({
   items: [],
 });
 
-// ── Restore draft from localStorage ──
+// ── Restore auto-save draft from localStorage ──
 try {
   const saved = localStorage.getItem(DRAFT_KEY);
   if (saved) {
@@ -375,7 +442,7 @@ try {
   }
 } catch (e) {}
 
-// ── Save draft whenever form changes ──
+// ── Auto-save whenever form changes ──
 watch(() => form, (val) => {
   localStorage.setItem(DRAFT_KEY, JSON.stringify({
     supplier_id:  val.supplier_id,
@@ -394,6 +461,78 @@ const clearDraft = () => {
   form.notes        = '';
   form.items        = [];
   draftRestored.value = false;
+  resumedFromId.value = null;
+};
+
+// ── Pause: save current form as a named draft slot ──
+const pauseGrn = () => {
+  if (form.items.length === 0 && !form.supplier_id) return;
+
+  const supplierObj  = props.suppliers?.find(s => s.id == form.supplier_id);
+  const supplierName = supplierObj ? supplierObj.name : 'No Supplier';
+  const now          = new Date();
+  const dateStr      = now.toLocaleDateString('en-LK', { day:'2-digit', month:'short', year:'numeric' });
+  const timeStr      = now.toLocaleTimeString('en-LK', { hour:'2-digit', minute:'2-digit' });
+  const total        = form.items.reduce((sum, i) => sum + (parseFloat(i.quantity)||0)*(parseFloat(i.unit_cost)||0), 0);
+
+  const entry = {
+    id:          Date.now().toString(),
+    label:       `${supplierName} — ${form.grn_date}${form.reference_no ? ' / ' + form.reference_no : ''}`,
+    paused_at:   now.toISOString(),
+    item_count:  form.items.length,
+    grand_total: total,
+    supplier_id:  form.supplier_id,
+    grn_date:     form.grn_date,
+    reference_no: form.reference_no,
+    notes:        form.notes,
+    items:        JSON.parse(JSON.stringify(form.items)),
+  };
+
+  // If we're resuming an existing paused draft, replace it in-place
+  if (resumedFromId.value) {
+    const idx = pausedDrafts.value.findIndex(d => d.id === resumedFromId.value);
+    if (idx !== -1) {
+      entry.id = resumedFromId.value;
+      pausedDrafts.value[idx] = entry;
+    } else {
+      pausedDrafts.value.unshift(entry);
+    }
+  } else {
+    pausedDrafts.value.unshift(entry);
+  }
+
+  savePausedList();
+  clearDraft();
+  alert(`GRN paused with ${entry.item_count} item(s). You can resume it from the "Saved Drafts" panel.`);
+};
+
+// ── Resume a paused draft into the active form ──
+const resumeDraft = (draft) => {
+  if ((form.items.length > 0 || form.supplier_id) &&
+      !confirm('Your current form has data. Load this saved draft and replace it?')) return;
+
+  clearDraft();
+  form.supplier_id  = draft.supplier_id;
+  form.grn_date     = draft.grn_date;
+  form.reference_no = draft.reference_no;
+  form.notes        = draft.notes;
+  form.items        = JSON.parse(JSON.stringify(draft.items));
+  resumedFromId.value = draft.id;
+  draftRestored.value = false;
+};
+
+// ── Delete a paused draft ──
+const deletePausedDraft = (id) => {
+  if (!confirm('Delete this saved draft?')) return;
+  pausedDrafts.value = pausedDrafts.value.filter(d => d.id !== id);
+  if (resumedFromId.value === id) resumedFromId.value = null;
+  savePausedList();
+};
+
+const formatPausedAt = (iso) => {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-LK', { day:'2-digit', month:'short', year:'numeric' }) +
+    ' ' + d.toLocaleTimeString('en-LK', { hour:'2-digit', minute:'2-digit' });
 };
 
 const productSearch = ref('');
@@ -662,7 +801,15 @@ const submit = () => {
   };
 
   router.post('/grn', payload, {
-    onSuccess: () => { localStorage.removeItem(DRAFT_KEY); },
+    onSuccess: () => {
+      localStorage.removeItem(DRAFT_KEY);
+      // Remove the resumed paused draft since GRN was submitted
+      if (resumedFromId.value) {
+        pausedDrafts.value = pausedDrafts.value.filter(d => d.id !== resumedFromId.value);
+        savePausedList();
+        resumedFromId.value = null;
+      }
+    },
     onFinish: () => { submitting.value = false; },
     onError:  () => { submitting.value = false; },
   });
