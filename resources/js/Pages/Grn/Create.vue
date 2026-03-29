@@ -6,11 +6,25 @@
 
     <div class="w-full md:w-5/6 mt-8 space-y-6">
       <!-- Title -->
-      <div class="flex items-center space-x-6">
-        <Link href="/grn">
-          <img src="/images/back-arrow.png" class="w-16 h-16" />
-        </Link>
-        <p class="text-5xl font-bold tracking-wide text-black uppercase">New GRN (Goods Received Note)</p>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-6">
+          <Link href="/grn">
+            <img src="/images/back-arrow.png" class="w-16 h-16" />
+          </Link>
+          <p class="text-5xl font-bold tracking-wide text-black uppercase">New GRN (Goods Received Note)</p>
+        </div>
+        <button
+          v-if="form.items.length > 0 || form.supplier_id || form.reference_no || form.notes"
+          @click="clearDraft"
+          type="button"
+          class="px-5 py-2 bg-red-100 text-red-600 border border-red-300 rounded-xl font-semibold text-base hover:bg-red-200 transition"
+        >Clear Draft</button>
+      </div>
+
+      <!-- Draft restored notice -->
+      <div v-if="draftRestored" class="flex items-center justify-between bg-yellow-50 border border-yellow-300 rounded-xl px-5 py-3 text-yellow-800 text-base font-medium">
+        <span>⚠️ Your previous unsaved draft has been restored ({{ form.items.length }} item{{ form.items.length === 1 ? '' : 's' }}).</span>
+        <button @click="draftRestored = false" class="text-yellow-600 hover:text-yellow-800 font-bold text-lg leading-none ml-4">✕</button>
       </div>
 
       <!-- Form -->
@@ -318,7 +332,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Header from '@/Components/custom/Header.vue';
 import Footer from '@/Components/custom/Footer.vue';
@@ -334,6 +348,9 @@ const errors = computed(() => page.props.errors ?? {});
 
 const today = new Date().toISOString().slice(0, 10);
 
+const DRAFT_KEY = 'grn_create_draft';
+const draftRestored = ref(false);
+
 const form = reactive({
   supplier_id: '',
   grn_date: today,
@@ -341,6 +358,43 @@ const form = reactive({
   notes: '',
   items: [],
 });
+
+// ── Restore draft from localStorage ──
+try {
+  const saved = localStorage.getItem(DRAFT_KEY);
+  if (saved) {
+    const draft = JSON.parse(saved);
+    if (draft.supplier_id)  form.supplier_id  = draft.supplier_id;
+    if (draft.grn_date)     form.grn_date     = draft.grn_date;
+    if (draft.reference_no) form.reference_no = draft.reference_no;
+    if (draft.notes)        form.notes        = draft.notes;
+    if (Array.isArray(draft.items) && draft.items.length > 0) {
+      form.items = draft.items;
+      draftRestored.value = true;
+    }
+  }
+} catch (e) {}
+
+// ── Save draft whenever form changes ──
+watch(() => form, (val) => {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify({
+    supplier_id:  val.supplier_id,
+    grn_date:     val.grn_date,
+    reference_no: val.reference_no,
+    notes:        val.notes,
+    items:        val.items,
+  }));
+}, { deep: true });
+
+const clearDraft = () => {
+  localStorage.removeItem(DRAFT_KEY);
+  form.supplier_id  = '';
+  form.grn_date     = today;
+  form.reference_no = '';
+  form.notes        = '';
+  form.items        = [];
+  draftRestored.value = false;
+};
 
 const productSearch = ref('');
 const searchResults = ref([]);
@@ -608,8 +662,9 @@ const submit = () => {
   };
 
   router.post('/grn', payload, {
+    onSuccess: () => { localStorage.removeItem(DRAFT_KEY); },
     onFinish: () => { submitting.value = false; },
-    onError: () => { submitting.value = false; },
+    onError:  () => { submitting.value = false; },
   });
 };
 
