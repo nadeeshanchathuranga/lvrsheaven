@@ -4,6 +4,29 @@
   <div class="flex flex-col items-center justify-start min-h-screen py-8 bg-gray-100 md:px-36 px-4">
     <Header />
 
+    <!-- Print Barcodes Modal -->
+    <div v-if="showBarcodeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+        <div class="text-5xl mb-4">🏷️</div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Print Barcodes?</h2>
+        <p class="text-gray-500 mb-6">
+          Would you like to print barcode stickers for all
+          <span class="font-semibold text-gray-700">{{ grn.items?.length ?? 0 }}</span>
+          item(s) in <span class="font-semibold text-gray-700">{{ grn.grn_number }}</span>?
+        </p>
+        <div class="flex gap-4 justify-center">
+          <button
+            @click="printBarcodes"
+            class="px-8 py-3 bg-green-600 text-white rounded-xl font-bold text-lg hover:bg-green-700 transition"
+          >🖨 Print Barcodes</button>
+          <button
+            @click="showBarcodeModal = false"
+            class="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-300 transition"
+          >Skip</button>
+        </div>
+      </div>
+    </div>
+
     <div class="w-full md:w-5/6 mt-8 space-y-6">
       <!-- Title -->
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -19,6 +42,10 @@
         <span :class="statusClass(grn.payment_status)" class="px-4 py-2 rounded-full text-sm font-bold uppercase">
           {{ grn.payment_status }}
         </span>
+        <button
+          @click="printBarcodes"
+          class="px-5 py-2 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition"
+        >🏷️ Print Barcodes</button>
       </div>
 
       <!-- GRN Details Card -->
@@ -260,7 +287,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import Header from '@/Components/custom/Header.vue';
 import Footer from '@/Components/custom/Footer.vue';
@@ -269,7 +296,16 @@ import { HasRole } from '@/Utils/Permissions';
 
 const props = defineProps({
   grn: Object,
+  justCreated: { type: Boolean, default: false },
 });
+
+// ── Barcode modal ──
+const showBarcodeModal = ref(props.justCreated);
+
+const printBarcodes = () => {
+  showBarcodeModal.value = false;
+  window.open(`/grn/${props.grn.id}/barcodes`, '_blank');
+};
 
 const searchQuery = ref('');
 

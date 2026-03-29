@@ -173,6 +173,7 @@ class GrnController extends Controller
             }
 
             return redirect()->route('grn.show', $grn->id)
+                ->with('just_created', true)
                 ->banner('GRN ' . $grnNumber . ' created successfully.');
         });
     }
@@ -226,6 +227,30 @@ class GrnController extends Controller
 
         return Inertia::render('Grn/Show', [
             'grn' => $grn,
+            'justCreated' => session()->pull('just_created', false),
+        ]);
+    }
+
+    public function barcodePrint(Grn $grn)
+    {
+        if (!Gate::allows('hasRole', ['Admin', 'Manager'])) {
+            abort(403, 'Unauthorized');
+        }
+
+        $grn->load(['items.product.supplier']);
+
+        // Build a flat list of products with the GRN quantity as the sticker count
+        $items = $grn->items->map(function ($item) {
+            $product = $item->product;
+            if (!$product) return null;
+            // Attach the GRN received quantity so the view knows how many stickers to print
+            $product->grn_quantity = $item->quantity;
+            return $product;
+        })->filter()->values();
+
+        return view('grn-barcodes', [
+            'grn'   => $grn,
+            'items' => $items,
         ]);
     }
 

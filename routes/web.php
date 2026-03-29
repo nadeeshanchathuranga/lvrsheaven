@@ -122,6 +122,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // GRN (Goods Received Note)
     Route::resource('grn', GrnController::class)->only(['index', 'create', 'store', 'show']);
     Route::post('/api/grn/search-product', [GrnController::class, 'searchProduct'])->name('grn.searchProduct');
+    Route::get('/grn/{grn}/barcodes', [GrnController::class, 'barcodePrint'])->name('grn.barcodes');
 
     // Goods Return Note
     Route::resource('goods-return-notes', GoodsReturnNoteController::class)->only(['index', 'create', 'store', 'show']);
