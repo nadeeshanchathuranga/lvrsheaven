@@ -82,6 +82,7 @@
       width:  30mm;
       height: 16mm;
       overflow: hidden;
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -123,6 +124,11 @@
     }
 
     .sticker-supplier {
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      writing-mode: vertical-lr;
       font-size: 3.5pt;
       color: #555;
     }
