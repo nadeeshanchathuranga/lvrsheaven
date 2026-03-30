@@ -56,7 +56,7 @@
     .sticker-grid {
       display: grid;
       grid-template-columns: repeat(3, 30mm);   /* exactly 3 columns */
-      grid-auto-rows: 16mm;
+      grid-auto-rows: minmax(16mm, 16mm);
       row-gap: 3mm;                             /* physical gap between label rows on roll */
       column-gap: 3mm;                          /* physical gap between label columns on roll */
       /* scale up for screen readability */
@@ -81,6 +81,7 @@
     .sticker {
       width:  30mm;
       height: 16mm;
+      max-height: 16mm;
       overflow: hidden;
       position: relative;
       display: flex;
