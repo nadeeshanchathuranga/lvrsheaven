@@ -123,41 +123,52 @@ class GrnController extends Controller
                         $item['barcode'] = $this->generateUniqueBarcode($item['unit_cost']);
                     }
 
-                    // Handle category - create new if provided, or use existing
-                    $categoryId = null;
-                    if (!empty($item['new_category_name'])) {
-                        // Create new category
-                        $category = Category::firstOrCreate(
-                            ['name' => trim($item['new_category_name'])],
-                            ['name' => trim($item['new_category_name'])]
-                        );
-                        $categoryId = $category->id;
-                    } elseif (!empty($item['category_id'])) {
-                        // Use existing category
-                        $categoryId = $item['category_id'];
+                    // If a product with this barcode already exists, never create a duplicate —
+                    // just adjust its stock exactly like the "existing product" path does.
+                    $product = Product::where('barcode', $item['barcode'])->first();
+
+                    if ($product) {
+                        // Barcode already in DB — treat as existing, update stock only
+                        $product->stock_quantity += $item['quantity'];
+                        $product->total_quantity  = ($product->total_quantity ?? 0) + $item['quantity'];
+                        $product->cost_price      = $item['unit_cost'];
+                        $product->purchase_date   = $validated['grn_date'];
+                        $product->save();
+                        $item['product_id'] = $product->id;
+                    } else {
+                        // Truly new barcode — handle category then create the product
+                        $categoryId = null;
+                        if (!empty($item['new_category_name'])) {
+                            $category = Category::firstOrCreate(
+                                ['name' => trim($item['new_category_name'])],
+                                ['name' => trim($item['new_category_name'])]
+                            );
+                            $categoryId = $category->id;
+                        } elseif (!empty($item['category_id'])) {
+                            $categoryId = $item['category_id'];
+                        }
+
+                        $product = Product::create([
+                            'name'           => $item['name'],
+                            'barcode'        => $item['barcode'],
+                            'category_id'    => $categoryId,
+                            'supplier_id'    => $validated['supplier_id'],
+                            'cost_price'     => $item['unit_cost'],
+                            'selling_price'  => $item['selling_price'],
+                            'stock_quantity' => $item['quantity'],
+                            'total_quantity' => $item['quantity'],
+                            'purchase_date'  => $validated['grn_date'],
+                        ]);
+
+                        $item['product_id'] = $product->id;
                     }
-
-                    // Create new product
-                    $product = Product::create([
-                        'name' => $item['name'],
-                        'barcode' => $item['barcode'],
-                        'category_id' => $categoryId,
-                        'supplier_id' => $validated['supplier_id'],
-                        'cost_price' => $item['unit_cost'],
-                        'selling_price' => $item['selling_price'],
-                        'stock_quantity' => $item['quantity'],
-                        'total_quantity' => $item['quantity'],
-                        'purchase_date' => $validated['grn_date'],
-                    ]);
-
-                    $item['product_id'] = $product->id;
                 } else {
-                    // Existing product - update it
+                    // Existing product selected from search — update stock only
                     $product = Product::find($item['product_id']);
                     $product->stock_quantity += $item['quantity'];
-                    $product->total_quantity = ($product->total_quantity ?? 0) + $item['quantity'];
-                    $product->cost_price = $item['unit_cost'];
-                    $product->purchase_date = $validated['grn_date'];
+                    $product->total_quantity  = ($product->total_quantity ?? 0) + $item['quantity'];
+                    $product->cost_price      = $item['unit_cost'];
+                    $product->purchase_date   = $validated['grn_date'];
                     $product->save();
                 }
 
