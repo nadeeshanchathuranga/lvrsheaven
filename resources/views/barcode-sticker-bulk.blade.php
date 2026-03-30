@@ -75,6 +75,7 @@
     .sticker {
       width:  30mm;
       height: 16mm;
+      min-height: 0;          /* override grid default min-height:auto */
       max-height: 16mm;
       overflow: hidden;
       position: relative;
@@ -198,6 +199,8 @@
           background:   '#fff',
         });
         el.removeAttribute('height');
+        el.removeAttribute('width');
+        el.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         el.style.height = '7mm';
         el.style.width  = '28mm';
       } catch(e) {
