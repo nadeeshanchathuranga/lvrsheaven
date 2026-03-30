@@ -6,11 +6,7 @@
   <title>Barcode Stickers – {{ $product->name }}</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
-    /* ─── Print page: one row of 3 stickers per 'page' on continuous roll ─── */
-    @page {
-      size: 96mm 16mm;
-      margin: 0;
-    }
+    /* @page is set dynamically below after we know the row count */
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -152,9 +148,17 @@
     $supplierCode = (isset($product->supplier->supplier_code) && trim($product->supplier->supplier_code) !== '') 
                     ? trim($product->supplier->supplier_code) 
                     : null;
+    $rows         = (int) ceil($qty / 3);
+    $pageHeight   = $rows * 16;  // total height in mm
   @endphp
 
-  {{-- No extra height hacks needed – zoom (unlike transform) respects layout flow --}}
+  {{-- Dynamic page size: one tall page that fits ALL rows – no page breaks --}}
+  <style>
+    @page {
+      size: 96mm {{ $pageHeight }}mm;
+      margin: 0;
+    }
+  </style>
 
   <div class="sheet-wrap">
     <div class="sticker-grid">
