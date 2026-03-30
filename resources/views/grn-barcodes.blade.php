@@ -6,9 +6,9 @@
   <title>GRN Barcodes – {{ $grn->grn_number }}</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
-    /* ─── Print page: 3 cols × 30mm + 2 gaps × 3mm = 96mm ─── */
+    /* ─── Print page: one row of 3 stickers per 'page' on continuous roll ─── */
     @page {
-      size: 96mm auto;
+      size: 96mm 16mm;
       margin: 0;
     }
 
@@ -94,8 +94,6 @@
     @media print {
       .sticker {
         border: none;
-        page-break-inside: avoid;
-        break-inside: avoid;
       }
     }
 
