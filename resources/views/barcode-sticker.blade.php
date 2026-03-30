@@ -69,10 +69,11 @@
     @media print {
       .toolbar    { display: none; }
       .sheet-wrap { display: block; padding: 0; }
-      body        { background: #fff; }
+      body        { background: #fff; width: 96mm; }
       .sticker-grid {
         transform: none;
         margin: 0;
+        width: 96mm;
       }
     }
 
