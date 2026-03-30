@@ -57,8 +57,7 @@
       display: grid;
       grid-template-columns: repeat(3, 30mm);   /* exactly 3 columns */
       grid-auto-rows: 16mm;
-      row-gap: 3mm;                             /* physical gap between label rows on roll */
-      column-gap: 3mm;                          /* physical gap between label columns on roll */
+      column-gap: 3mm;                          /* 3 cols × 30mm + 2 gaps × 3mm = 96mm */
       /* scale up for screen readability – zoom (unlike transform)
          actually changes the layout box so rows don't overlay */
       zoom: 3;
