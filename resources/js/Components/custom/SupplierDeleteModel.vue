@@ -30,8 +30,8 @@
           >
             <!-- Confirmation Message -->
             <p class="text-[15px] text-center text-gray-700">
-             Are you sure you want to delete this Supplier? This action cannot
-              be undone.
+             Are you sure you want to deactivate this supplier?
+             You can keep related GRNs and payments while marking supplier as inactive.
             </p>
 
             <!-- Modal Buttons -->
@@ -49,7 +49,7 @@
                 class="px-6 py-2 text-[15px] text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring focus:ring-red-300"
                 @click.prevent="() => { playClickSound(); deleteItem(); }"
               >
-                Delete
+                Deactivate
               </button>
             </div>
           </DialogPanel>
