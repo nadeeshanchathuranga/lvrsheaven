@@ -10,6 +10,27 @@ class Supplier extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::created(function (Supplier $supplier) {
+            if (!empty(trim((string) $supplier->supplier_code))) {
+                return;
+            }
+
+            $supplier->updateQuietly([
+                'supplier_code' => str_pad((string) $supplier->id, 4, '0', STR_PAD_LEFT),
+            ]);
+        });
+
+        static::updating(function (Supplier $supplier) {
+            if (!empty(trim((string) $supplier->supplier_code))) {
+                return;
+            }
+
+            $supplier->supplier_code = str_pad((string) $supplier->id, 4, '0', STR_PAD_LEFT);
+        });
+    }
+
     protected $fillable = [
         'supplier_code',
         'name',

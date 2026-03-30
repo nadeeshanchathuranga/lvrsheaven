@@ -39,17 +39,15 @@
   <div class="grid grid-cols-2 gap-6 mt-6 text-left">
     <!-- Supplier Code -->
     <div class="col-span-2">
-      <label class="block text-sm font-medium text-gray-300">Supplier Code <span class="text-gray-400 text-xs">(optional, up to 4 digits)</span>:</label>
+      <label class="block text-sm font-medium text-gray-300">Supplier Code <span class="text-gray-400 text-xs">(auto-generated)</span>:</label>
       <input
-        v-model="form.supplier_code"
+        :value="nextSupplierCode"
         type="text"
-        inputmode="numeric"
-        maxlength="4"
-        placeholder="e.g. 1234"
-        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)"
-        class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+        disabled
+        readonly
+        class="w-full px-4 py-2 mt-2 text-black bg-gray-200 rounded-md cursor-not-allowed"
       />
-      <span v-if="form.errors.supplier_code" class="mt-1 text-red-500 text-sm">{{ form.errors.supplier_code }}</span>
+      <p class="mt-1 text-xs text-gray-400">Code will be assigned automatically when saving.</p>
     </div>
 
     <!-- Supplier Name -->
@@ -169,6 +167,7 @@ import {
   TransitionChild,
   TransitionRoot,
 } from "@headlessui/vue";
+import { computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
 
 const playClickSound = () => {
@@ -178,11 +177,24 @@ const playClickSound = () => {
 
 const emit = defineEmits(["update:open"]);
 
-defineProps({
+const props = defineProps({
   open: {
     type: Boolean,
     required: true,
   },
+  suppliers: {
+    type: Array,
+    default: () => [],
+  },
+});
+
+const nextSupplierCode = computed(() => {
+  const maxId = (props.suppliers || []).reduce((max, s) => {
+    const id = Number(s?.id || 0);
+    return id > max ? id : max;
+  }, 0);
+
+  return String(maxId + 1).padStart(4, '0');
 });
 
 const form = useForm({
@@ -200,6 +212,9 @@ const handleImageUpload = (event) => {
 };
 
 const submit = () => {
+  // Keep backend as single source of truth for generated code
+  form.supplier_code = null;
+
   form.post("/suppliers", {
     onSuccess: () => {
       form.reset();

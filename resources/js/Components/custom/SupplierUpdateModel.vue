@@ -40,15 +40,13 @@
               <div class="grid grid-cols-2 gap-6 mt-6 text-left">
                 <!-- Supplier Code -->
                 <div class="col-span-2">
-                  <label class="block text-sm font-medium text-gray-300">Supplier Code <span class="text-gray-400 text-xs">(optional, up to 4 digits)</span>:</label>
+                  <label class="block text-sm font-medium text-gray-300">Supplier Code <span class="text-gray-400 text-xs">(auto-generated)</span>:</label>
                   <input
-                    v-model="form.supplier_code"
+                    :value="displaySupplierCode"
                     type="text"
-                    inputmode="numeric"
-                    maxlength="4"
-                    placeholder="e.g. 1234"
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)"
-                    class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                    disabled
+                    readonly
+                    class="w-full px-4 py-2 mt-2 text-black bg-gray-200 rounded-md cursor-not-allowed"
                   />
                   <span v-if="form.errors.supplier_code" class="mt-1 text-red-500 text-sm">{{ form.errors.supplier_code }}</span>
                 </div>
@@ -224,7 +222,7 @@ import {
   TransitionChild,
   TransitionRoot,
 } from "@headlessui/vue";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useForm } from "@inertiajs/vue3";
 
 // Emit events for parent communication
@@ -257,6 +255,15 @@ const form = useForm({
   image: null, // For file upload
 });
 
+const displaySupplierCode = computed(() => {
+  if (!selectedSupplier) return "0001";
+
+  const existingCode = String(selectedSupplier.supplier_code || '').trim();
+  if (existingCode) return existingCode;
+
+  return String(selectedSupplier.id || 0).padStart(4, '0');
+});
+
 // Handle file input for the image upload
 const handleImageUpload = (event) => {
   form.image = event.target.files[0];
@@ -267,7 +274,9 @@ watch(
   () => selectedSupplier,
   (newValue) => {
     if (newValue) {
-      form.supplier_code = newValue.supplier_code || "";
+      form.supplier_code = (newValue.supplier_code && String(newValue.supplier_code).trim())
+        ? newValue.supplier_code
+        : String(newValue.id || 0).padStart(4, '0');
       form.name = newValue.name || "";
       form.contact = newValue.contact || "";
       form.email = newValue.email || "";
