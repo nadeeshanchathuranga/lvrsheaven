@@ -136,72 +136,75 @@
         </div>
       </div>
 
-      <div class="grid md:grid-cols-4 lg:grid-cols-5 grid-cols-1 gap-6">
+      <div class="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-2xl">
         <template v-if="products.data.length > 0">
-          <div
-            v-for="product in products.data"
-            :key="product.id"
-            class="overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-b from-slate-950 to-slate-900 text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
-          >
-            <div
-              @click="
-                () => {
-                  openViewModal(product);
-                }
-              "
-              class="cursor-pointer"
-            >
-              <div class="px-4 pt-4 pb-3 border-b border-slate-800">
-                <div class="flex items-start justify-between gap-3">
-                  <p class="text-lg font-extrabold leading-6 tracking-wide text-white">
-                    {{ product.name || "N/A" }}
-                  </p>
-                  <p class="shrink-0 rounded-full bg-emerald-600 px-3 py-1 text-sm font-bold text-white">
-                    Rs. {{ Number(product.selling_price || 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                  </p>
-                </div>
-                <p class="mt-2 text-sm font-medium text-slate-300">
-                  Barcode: <span class="font-semibold text-slate-100">{{ product.barcode || "N/A" }}</span>
-                </p>
-              </div>
-            </div>
-            <div class="px-4 py-4 space-y-4">
-              <div class="rounded-xl bg-slate-800/70 px-3 py-2">
-                <p class="text-sm font-semibold text-slate-300">
-                  Supplier: <span class="font-bold text-white">{{ product.supplier?.name || "N/A" }}</span>
-                </p>
-              </div>
-
-              <div class="flex items-center justify-between gap-2">
-                <p
-                  v-if="product.stock_quantity > 0"
-                  class="rounded-full bg-emerald-900/50 px-3 py-1 text-sm font-bold tracking-wide text-emerald-400"
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm text-left text-gray-700">
+              <thead class="bg-gray-100 border-b border-gray-200">
+                <tr>
+                  <th class="px-5 py-4 font-bold tracking-wide text-gray-800 uppercase">Name</th>
+                  <th class="px-5 py-4 font-bold tracking-wide text-gray-800 uppercase">Barcode</th>
+                  <th class="px-5 py-4 font-bold tracking-wide text-gray-800 uppercase">Category</th>
+                  <th class="px-5 py-4 font-bold tracking-wide text-gray-800 uppercase">Supplier</th>
+                  <th class="px-5 py-4 font-bold tracking-wide text-gray-800 uppercase">Price</th>
+                  <th class="px-5 py-4 font-bold tracking-wide text-gray-800 uppercase">Stock</th>
+                  <th class="px-5 py-4 font-bold tracking-wide text-gray-800 uppercase text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="product in products.data"
+                  :key="product.id"
+                  class="transition-colors border-b border-gray-100 hover:bg-blue-50"
                 >
-                  <i class="ri-checkbox-blank-circle-fill"></i> In Stock ({{ product.stock_quantity }})
-                </p>
-                <p v-else class="rounded-full bg-red-900/40 px-3 py-1 text-sm font-bold tracking-wide text-red-400">
-                  <i class="ri-checkbox-blank-circle-fill"></i> Out of Stock
-                </p>
-
-                <div class="flex justify-center">
-                  <button
-                    @click="openBarcodeQty(product)"
-                    class="flex items-center justify-center px-3 py-2 gap-2 text-sm font-semibold text-white transition duration-200 bg-indigo-600 rounded-lg cursor-pointer hover:bg-indigo-700"
-                    title="Print Barcode Stickers"
-                  >
-                    <i class="ri-barcode-line text-lg"></i>
-                    <span>Print Barcode</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+                  <td class="px-5 py-4 font-semibold text-gray-900">{{ product.name || "N/A" }}</td>
+                  <td class="px-5 py-4">{{ product.barcode || "N/A" }}</td>
+                  <td class="px-5 py-4">{{ product.category?.name || "N/A" }}</td>
+                  <td class="px-5 py-4">{{ product.supplier?.name || "N/A" }}</td>
+                  <td class="px-5 py-4 font-semibold text-emerald-700">
+                    Rs. {{ Number(product.selling_price || 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                  </td>
+                  <td class="px-5 py-4">
+                    <span
+                      v-if="product.stock_quantity > 0"
+                      class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700"
+                    >
+                      In Stock ({{ product.stock_quantity }})
+                    </span>
+                    <span
+                      v-else
+                      class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700"
+                    >
+                      Out of Stock
+                    </span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <div class="flex items-center justify-end gap-2">
+                      <button
+                        @click="openViewModal(product)"
+                        class="px-3 py-2 text-xs font-semibold text-white transition bg-gray-700 rounded-lg hover:bg-gray-800"
+                        title="View Product"
+                      >
+                        View
+                      </button>
+                      <button
+                        @click="openBarcodeQty(product)"
+                        class="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-white transition bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                        title="Print Barcode Stickers"
+                      >
+                        <i class="ri-barcode-line text-base"></i>
+                        <span>Print</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </template>
         <template v-else>
-          <div class="col-span-4 text-center text-gray-500">
-            <p class="text-center text-red-500 text-[17px]">
-              No Products Available
-            </p>
+          <div class="px-6 py-10 text-center text-red-500 text-[17px]">
+            No Products Available
           </div>
         </template>
       </div>
