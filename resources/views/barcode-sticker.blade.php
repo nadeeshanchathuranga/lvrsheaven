@@ -89,27 +89,27 @@
     }
 
     .sticker-name {
-      font-size: 4.2pt;
+      font-size: 3.5pt;
       font-weight: 700;
       color: #000;
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 28mm;
+      max-width: 26mm;
     }
 
     .sticker svg {
       display: block;
-      width: 28mm;
-      height: 7mm;
-      max-height: 7mm;
+      width: 26mm;
+      height: 5.5mm;
+      max-height: 5.5mm;
       overflow: hidden;
     }
 
     .sticker-price {
-      font-size: 5pt;
+      font-size: 4pt;
       font-weight: 800;
       color: #000;
     }
@@ -163,19 +163,19 @@
       try {
         JsBarcode(el, el.getAttribute('data-barcode'), {
           format:       'CODE128',
-          width:        0.9,
-          height:       16,
+          width:        0.7,
+          height:       14,
           displayValue: true,
-          fontSize:     6,
-          margin:       1,
+          fontSize:     5,
+          margin:       0,
           lineColor:    '#000',
           background:   '#fff',
         });
         el.removeAttribute('height');
         el.removeAttribute('width');
         el.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-        el.style.height = '7mm';
-        el.style.width  = '28mm';
+        el.style.height = '5.5mm';
+        el.style.width  = '26mm';
       } catch(e) {
         el.insertAdjacentHTML('afterend', '<span style="font-size:4pt;color:red">ERR</span>');
         el.remove();
