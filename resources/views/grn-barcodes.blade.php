@@ -108,7 +108,9 @@
     .sticker svg {
       display: block;
       width: 28mm;
-      height: 8mm;
+      height: 7mm;
+      max-height: 7mm;
+      overflow: hidden;
     }
 
     .sticker-price {
@@ -185,10 +187,10 @@
       try {
         JsBarcode(el, el.getAttribute('data-barcode'), {
           format:       'CODE128',
-          width:        1.0,
-          height:       26,
+          width:        0.9,
+          height:       16,
           displayValue: true,
-          fontSize:     8,
+          fontSize:     6,
           margin:       1,
           lineColor:    '#000',
           background:   '#fff',
