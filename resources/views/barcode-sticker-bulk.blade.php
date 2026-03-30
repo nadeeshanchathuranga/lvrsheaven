@@ -52,12 +52,12 @@
     .sticker-grid {
       display: grid;
       grid-template-columns: repeat(3, 30mm);
-      grid-auto-rows: minmax(16mm, 16mm);
+      grid-auto-rows: 16mm;
       row-gap: 3mm; /* physical gap between label rows on roll */
       column-gap: 3mm; /* physical gap between label columns on roll */
-      transform: scale(3);
-      transform-origin: top left;
-      margin-bottom: calc((16mm * var(--rows) * 2));
+      /* scale up for screen readability – zoom (unlike transform)
+         actually changes the layout box so rows don't overlay */
+      zoom: 3;
     }
 
     @media print {
@@ -65,7 +65,7 @@
       .sheet-wrap { display: block; padding: 0; min-height: auto; }
       body        { background: #fff; width: 96mm; }
       .sticker-grid {
-        transform: none;
+        zoom: 1;
         margin: 0;
         width: 96mm;
       }
@@ -121,21 +121,15 @@
       color: #000;
     }
 
-    .sticker-bottom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 28mm;
-    }
-
-    .sticker-barcode-num {
-      font-size: 4pt;
-      color: #000;
-    }
-
     .sticker-supplier {
-      font-size: 3.5pt;
+      position: absolute;
+      right: 0.5mm;
+      top: 0.5mm;
+      font-size: 3pt;
       color: #555;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
     }
 
     @media print {
@@ -152,7 +146,6 @@
     foreach ($products as $product) {
       $totalStickers += max(1, $product->stock_quantity ?? 0);
     }
-    $rows = ceil($totalStickers / 3);
   @endphp
 
   <div class="toolbar">
@@ -163,12 +156,7 @@
     <button class="btn-print" onclick="window.print()">🖨&nbsp; Print All Stickers</button>
   </div>
 
-  <style>
-    .sticker-grid { --rows: {{ $rows }}; }
-    @media screen {
-      .sheet-wrap { min-height: calc({{ $rows }} * 16mm * 3 + 80px); }
-    }
-  </style>
+  {{-- No extra height hacks needed – zoom (unlike transform) respects layout flow --}}
 
   <div class="sheet-wrap">
     <div class="sticker-grid">
@@ -188,11 +176,8 @@
         <div class="sticker">
           <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
           <svg id="bc-{{ $stickerIndex++ }}" data-barcode="{{ $barcode }}"></svg>
-          <div class="sticker-bottom">
-            <span class="sticker-barcode-num">{{ $barcode }}</span>
-            @if($supplierCode)<span class="sticker-supplier">{{ $supplierCode }}</span>@endif
-          </div>
           <div class="sticker-price">Rs. {{ $price }}</div>
+          @if($supplierCode)<div class="sticker-supplier">{{ $supplierCode }}</div>@endif
         </div>
         @endfor
       @endforeach
@@ -206,7 +191,8 @@
           format:       'CODE128',
           width:        0.9,
           height:       16,
-          displayValue: false,
+          displayValue: true,
+          fontSize:     6,
           margin:       1,
           lineColor:    '#000',
           background:   '#fff',

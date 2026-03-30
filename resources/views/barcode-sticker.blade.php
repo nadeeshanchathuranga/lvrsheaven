@@ -56,14 +56,12 @@
     .sticker-grid {
       display: grid;
       grid-template-columns: repeat(3, 30mm);   /* exactly 3 columns */
-      grid-auto-rows: minmax(16mm, 16mm);
+      grid-auto-rows: 16mm;
       row-gap: 3mm;                             /* physical gap between label rows on roll */
       column-gap: 3mm;                          /* physical gap between label columns on roll */
-      /* scale up for screen readability */
-      transform: scale(3);
-      transform-origin: top left;
-      /* compensate for the scale so the wrapper isn't clipped */
-      margin-bottom: calc((16mm * var(--rows) * 2));
+      /* scale up for screen readability – zoom (unlike transform)
+         actually changes the layout box so rows don't overlay */
+      zoom: 3;
     }
 
     @media print {
@@ -71,7 +69,7 @@
       .sheet-wrap { display: block; padding: 0; min-height: auto; }
       body        { background: #fff; width: 96mm; }
       .sticker-grid {
-        transform: none;
+        zoom: 1;
         margin: 0;
         width: 96mm;
       }
@@ -126,21 +124,15 @@
       color: #000;
     }
 
-    .sticker-bottom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 28mm;
-    }
-
-    .sticker-barcode-num {
-      font-size: 4pt;
-      color: #000;
-    }
-
     .sticker-supplier {
-      font-size: 3.5pt;
+      position: absolute;
+      right: 0.5mm;
+      top: 0.5mm;
+      font-size: 3pt;
       color: #555;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
     }
   </style>
 </head>
@@ -158,19 +150,12 @@
     $barcode      = $product->barcode ?: ($product->code ?: (string)$product->id);
     $name         = $product->name ?? '';
     $price        = number_format($product->selling_price ?? 0, 2);
-    $rows         = ceil($qty / 3);
     $supplierCode = (isset($product->supplier->supplier_code) && trim($product->supplier->supplier_code) !== '') 
                     ? trim($product->supplier->supplier_code) 
                     : null;
   @endphp
 
-  {{-- CSS variable to compensate transform scale height --}}
-  <style>
-    .sticker-grid { --rows: {{ $rows }}; }
-    @media screen {
-      .sheet-wrap { min-height: calc({{ $rows }} * 16mm * 3 + 80px); }
-    }
-  </style>
+  {{-- No extra height hacks needed – zoom (unlike transform) respects layout flow --}}
 
   <div class="sheet-wrap">
     <div class="sticker-grid">
@@ -178,11 +163,8 @@
       <div class="sticker">
         <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
         <svg id="bc-{{ $i }}" data-barcode="{{ $barcode }}"></svg>
-        <div class="sticker-bottom">
-          <span class="sticker-barcode-num">{{ $barcode }}</span>
-          @if($supplierCode)<span class="sticker-supplier">{{ $supplierCode }}</span>@endif
-        </div>
         <div class="sticker-price">Rs. {{ $price }}</div>
+        @if($supplierCode)<div class="sticker-supplier">{{ $supplierCode }}</div>@endif
       </div>
       @endfor
     </div>
@@ -195,7 +177,8 @@
           format:       'CODE128',
           width:        0.9,
           height:       16,
-          displayValue: false,
+          displayValue: true,
+          fontSize:     6,
           margin:       1,
           lineColor:    '#000',
           background:   '#fff',
