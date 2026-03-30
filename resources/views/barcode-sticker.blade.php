@@ -125,14 +125,13 @@
 
     .sticker-supplier {
       position: absolute;
-      right: 0;
-      top: 0;
-      height: 100%;
-      writing-mode: vertical-lr;
-      font-size: 3.5pt;
+      right: 0.5mm;
+      top: 0.5mm;
+      font-size: 3pt;
       color: #555;
       margin: 0;
       padding: 0;
+      line-height: 1;
     }
   </style>
 </head>
