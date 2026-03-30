@@ -57,7 +57,7 @@
       display: grid;
       grid-template-columns: repeat(3, 30mm);   /* exactly 3 columns */
       grid-auto-rows: 16mm;
-      row-gap: 5mm;                             /* physical gap between label rows on roll */
+      row-gap: 3mm;                             /* physical gap between label rows on roll */
       column-gap: 3mm;                          /* physical gap between label columns on roll */
       /* scale up for screen readability */
       transform: scale(3);
