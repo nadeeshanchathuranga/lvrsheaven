@@ -191,6 +191,9 @@
           lineColor:    '#000',
           background:   '#fff',
         });
+        el.removeAttribute('height');
+        el.style.height = '7mm';
+        el.style.width  = '28mm';
       } catch(e) {
         el.insertAdjacentHTML('afterend', '<span style="font-size:4pt;color:red">ERR</span>');
         el.remove();
