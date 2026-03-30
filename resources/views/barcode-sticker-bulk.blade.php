@@ -6,9 +6,9 @@
   <title>Bulk Barcode Stickers</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
-    /* ─── Print page: exact roll width = 3 × 30mm ─── */
+    /* ─── Print page: 3 cols × 30mm + 2 gaps × 3mm = 96mm ─── */
     @page {
-      size: 90mm auto;
+      size: 96mm auto;
       margin: 0;
     }
 
@@ -53,6 +53,8 @@
       display: grid;
       grid-template-columns: repeat(3, 30mm);
       grid-auto-rows: 16mm;
+      row-gap: 3mm; /* physical gap between label rows on roll */
+      column-gap: 3mm; /* physical gap between label columns on roll */
       transform: scale(3);
       transform-origin: top left;
       margin-bottom: calc((16mm * var(--rows) * 2));
@@ -112,6 +114,12 @@
       display: block;
       width:  28mm;
       height: 8mm;
+    }
+
+    /* When supplier strip is shown (4.5mm right column), shrink SVG to fit remaining content area */
+    /* Content area = 30mm - 0.8mm left padding - 5mm right padding = 24.2mm → use 23.5mm with margin */
+    .sticker.has-supplier svg {
+      width: 23.5mm;
     }
 
     .sticker-price {
