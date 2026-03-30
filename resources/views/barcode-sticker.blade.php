@@ -106,37 +106,37 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 0.5mm 0.8mm;
+      padding: 0.3mm 0.6mm;
     }
 
     .sticker-name {
-      font-size: 4.2pt;
+      font-size: 3.5pt;
       font-weight: 700;
       color: #000;
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 27mm;
-      margin-bottom: 0.4mm;
+      margin-bottom: 0.2mm;
     }
 
     .sticker svg {
       display: block;
       width:  27mm;
-      height: 8mm;
+      height: 6mm;
     }
 
     .sticker-price {
-      font-size: 5pt;
+      font-size: 4pt;
       font-weight: 800;
       color: #000;
-      margin-top: 0.3mm;
+      margin-top: 0.2mm;
     }
 
     .sticker-code {
-      font-size: 3.5pt;
+      font-size: 3pt;
       color: #555;
       margin-top: 0.1mm;
       letter-spacing: 0.3pt;
@@ -152,13 +152,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      writing-mode: vertical-rl;
-      transform: rotate(180deg); /* reads bottom-to-top */
+      writing-mode: vertical-lr;
       font-size: 3.5pt;
       font-weight: 600;
       color: #555;
       letter-spacing: 0.4pt;
-      border-left: 0.2mm solid #ddd;
+      border-left: 0.2mm solid #ccc;
       overflow: hidden;
       white-space: nowrap;
       background: #fff;
@@ -166,7 +165,7 @@
 
     @media print {
       .sticker-supplier {
-        border-left: 0.2mm solid #ccc;
+        /* border already set above */
       }
     }
   </style>

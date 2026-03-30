@@ -160,7 +160,7 @@
 
     @media print {
       .sticker-supplier {
-        border-left: 0.2mm solid #ccc;
+        /* border already set above */
       }
     }
   </style>
