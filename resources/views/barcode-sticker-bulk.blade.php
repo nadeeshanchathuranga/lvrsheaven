@@ -126,6 +126,8 @@
       writing-mode: vertical-lr;
       font-size: 3.5pt;
       color: #555;
+      margin: 0;
+      padding: 0;
     }
 
     @media print {
