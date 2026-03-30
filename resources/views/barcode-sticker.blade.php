@@ -126,15 +126,21 @@
       color: #000;
     }
 
+    .sticker-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 28mm;
+    }
+
+    .sticker-barcode-num {
+      font-size: 4pt;
+      color: #000;
+    }
+
     .sticker-supplier {
-      position: absolute;
-      right: 0.5mm;
-      top: 0.5mm;
-      font-size: 3pt;
+      font-size: 3.5pt;
       color: #555;
-      margin: 0;
-      padding: 0;
-      line-height: 1;
     }
   </style>
 </head>
@@ -172,8 +178,11 @@
       <div class="sticker">
         <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
         <svg id="bc-{{ $i }}" data-barcode="{{ $barcode }}"></svg>
+        <div class="sticker-bottom">
+          <span class="sticker-barcode-num">{{ $barcode }}</span>
+          @if($supplierCode)<span class="sticker-supplier">{{ $supplierCode }}</span>@endif
+        </div>
         <div class="sticker-price">Rs. {{ $price }}</div>
-        @if($supplierCode)<div class="sticker-supplier">{{ $supplierCode }}</div>@endif
       </div>
       @endfor
     </div>
@@ -186,8 +195,7 @@
           format:       'CODE128',
           width:        0.9,
           height:       16,
-          displayValue: true,
-          fontSize:     6,
+          displayValue: false,
           margin:       1,
           lineColor:    '#000',
           background:   '#fff',
