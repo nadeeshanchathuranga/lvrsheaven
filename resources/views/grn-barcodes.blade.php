@@ -76,9 +76,11 @@
       width:  30mm;
       height: 16mm;
       overflow: hidden;
+      position: relative;
       display: flex;
-      flex-direction: row;       /* main content + supplier strip side by side */
-      align-items: stretch;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       border: 0.3mm dashed #bbb;
       background: #fff;
     }
@@ -91,10 +93,9 @@
       }
     }
 
-    /* ─── Main content area (name + barcode + price) ─── */
+    /* ─── Main content area – always full width, supplier strip overlays on top ─── */
     .sticker-main {
-      flex: 1;
-      min-width: 0;
+      width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -121,15 +122,6 @@
       height: 8mm;
     }
 
-    /* When supplier strip is present, shrink content to fit the remaining area */
-    .sticker.has-supplier .sticker-main svg {
-      width: 22mm;
-    }
-
-    .sticker.has-supplier .sticker-name {
-      max-width: 22mm;
-    }
-
     .sticker-price {
       font-size: 5pt;
       font-weight: 800;
@@ -144,15 +136,18 @@
       letter-spacing: 0.3pt;
     }
 
-    /* ─── Right supplier code strip ─── */
+    /* ─── Right supplier code strip (absolute overlay, does not affect content layout) ─── */
     .sticker-supplier {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
       width: 4.5mm;
-      min-width: 4.5mm;
       display: flex;
       align-items: center;
       justify-content: center;
       writing-mode: vertical-rl;
-      transform: rotate(180deg); /* reads bottom-to-top */
+      transform: rotate(180deg);
       font-size: 3.5pt;
       font-weight: 600;
       color: #555;
