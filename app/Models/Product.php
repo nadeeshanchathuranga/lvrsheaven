@@ -20,6 +20,8 @@ class Product extends Model
         'discounted_price',
         'color_id',
         'cost_price',
+        'margin_percentage',
+        'margin_price',
         'selling_price',
         'stock_quantity',
         'barcode',
@@ -63,6 +65,8 @@ class Product extends Model
 
     protected $casts = [
         'expire_date' => 'date:Y-m-d', // Cast expiry_date as a date
+        'margin_percentage' => 'decimal:2',
+        'margin_price' => 'decimal:2',
     ];
 
       public function promotionItems()

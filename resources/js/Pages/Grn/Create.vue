@@ -159,26 +159,32 @@
           </div>
 
           <!-- Add New Product Inline Form -->
-          <div class="bg-green-50 border-3 border-green-400 rounded-2xl p-8 mb-8">
-            <h4 class="text-2xl font-bold text-green-800 mb-6">➕ Or Add New Product</h4>
-            <div class="grid grid-cols-1 md:grid-cols-7 gap-6 items-end">
-              <div class="md:col-span-2">
-                <label class="block text-lg font-bold text-gray-700 mb-3">Product Name <span class="text-red-500">*</span></label>
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-6 md:p-8 mb-8">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+              <h4 class="text-2xl font-extrabold text-green-800">➕ Or Add New Product</h4>
+              <p class="text-sm md:text-base text-green-700 font-medium">
+                Selling Price = Cost Price + (Cost Price x Margin / 100)
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+              <div class="lg:col-span-4">
+                <label class="block text-base font-bold text-gray-700 mb-2">Product Name <span class="text-red-500">*</span></label>
                 <input
                   v-model="newProduct.name"
                   type="text"
                   placeholder="Enter product name"
-                  class="w-full border-2 border-gray-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
                 />
-                <p v-if="newProductErrors.name" class="text-red-500 text-base mt-2">{{ newProductErrors.name }}</p>
+                <p v-if="newProductErrors.name" class="text-red-500 text-sm mt-2">{{ newProductErrors.name }}</p>
               </div>
 
-              <div>
-                <label class="block text-lg font-bold text-gray-700 mb-3">Category</label>
+              <div class="lg:col-span-3">
+                <label class="block text-base font-bold text-gray-700 mb-2">Category</label>
                 <div v-if="!showNewCategoryInput">
                   <select
                     v-model="newProduct.category_id"
-                    class="w-full border-2 border-gray-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                    class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
                   >
                     <option value="">Select...</option>
                     <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
@@ -196,7 +202,7 @@
                     v-model="newProduct.new_category_name"
                     type="text"
                     placeholder="New category name"
-                    class="w-full border-2 border-green-400 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                    class="w-full border-2 border-green-400 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
                   />
                   <button
                     @click="cancelNewCategory"
@@ -208,61 +214,78 @@
                 </div>
               </div>
 
-              <div>
-                <label class="block text-lg font-bold text-gray-700 mb-3">Barcode (12 digits)</label>
+              <div class="lg:col-span-2">
+                <label class="block text-base font-bold text-gray-700 mb-2">Barcode (12 digits)</label>
                 <input
                   v-model="newProduct.barcode"
                   type="text"
                   maxlength="12"
                   placeholder="Auto-generated"
-                  class="w-full border-2 border-gray-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
                 />
               </div>
 
-              <div>
-                <label class="block text-lg font-bold text-gray-700 mb-3">Cost Price <span class="text-red-500">*</span></label>
+              <div class="lg:col-span-3">
+                <label class="block text-base font-bold text-gray-700 mb-2">Quantity <span class="text-red-500">*</span></label>
+                <input
+                  v-model.number="newProduct.quantity"
+                  type="number"
+                  min="1"
+                  placeholder="1"
+                  class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
+                />
+                <p v-if="newProductErrors.quantity" class="text-red-500 text-sm mt-2">{{ newProductErrors.quantity }}</p>
+              </div>
+
+              <div class="lg:col-span-3">
+                <label class="block text-base font-bold text-gray-700 mb-2">Cost Price <span class="text-red-500">*</span></label>
                 <input
                   v-model.number="newProduct.unit_cost"
                   type="number"
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  class="w-full border-2 border-gray-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
                 />
-                <p v-if="newProductErrors.unit_cost" class="text-red-500 text-base mt-2">{{ newProductErrors.unit_cost }}</p>
+                <p v-if="newProductErrors.unit_cost" class="text-red-500 text-sm mt-2">{{ newProductErrors.unit_cost }}</p>
               </div>
 
-              <div>
-                <label class="block text-lg font-bold text-gray-700 mb-3">Selling Price <span class="text-red-500">*</span></label>
+              <div class="lg:col-span-3">
+                <label class="block text-base font-bold text-gray-700 mb-2">Margin % <span class="text-red-500">*</span></label>
+                <input
+                  v-model.number="newProduct.margin_percentage"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-400"
+                />
+                <p v-if="newProductErrors.margin_percentage" class="text-red-500 text-sm mt-2">{{ newProductErrors.margin_percentage }}</p>
+              </div>
+
+              <div class="lg:col-span-3">
+                <label class="block text-base font-bold text-gray-700 mb-2">Selling Price</label>
                 <input
                   v-model.number="newProduct.selling_price"
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="0.00"
-                  class="w-full border-2 border-gray-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                  readonly
+                  placeholder="Auto-calculated"
+                  class="w-full border-2 border-gray-200 bg-gray-100 rounded-xl px-4 py-3 text-base focus:outline-none"
                 />
-                <p v-if="newProductErrors.selling_price" class="text-red-500 text-base mt-2">{{ newProductErrors.selling_price }}</p>
+                <p v-if="newProductErrors.selling_price" class="text-red-500 text-sm mt-2">{{ newProductErrors.selling_price }}</p>
+                <p class="text-sm text-gray-500 mt-2">Margin Value: Rs. {{ (newProduct.margin_price ?? 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) }}</p>
               </div>
 
-              <div>
-                <label class="block text-lg font-bold text-gray-700 mb-3">Quantity <span class="text-red-500">*</span></label>
-                <input
-                  v-model.number="newProduct.quantity"
-                  type="number"
-                  min="1"
-                  placeholder="1"
-                  class="w-full border-2 border-gray-300 rounded-xl px-5 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                />
-                <p v-if="newProductErrors.quantity" class="text-red-500 text-base mt-2">{{ newProductErrors.quantity }}</p>
+              <div class="lg:col-span-3 lg:self-end">
+                <button
+                  @click="addNewProduct"
+                  class="w-full px-8 py-3.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition text-lg shadow-sm"
+                >
+                  Add Product
+                </button>
               </div>
-
-              <button
-                @click="addNewProduct"
-                class="px-8 py-4 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition text-lg"
-              >
-                Add Product
-              </button>
             </div>
           </div>
 
@@ -626,11 +649,30 @@ const newProduct = reactive({
   new_category_name: '',
   barcode: '',
   unit_cost: null,
+  margin_percentage: null,
+  margin_price: null,
   selling_price: null,
   quantity: 1,
 });
 const newProductErrors = reactive({});
 const showNewCategoryInput = ref(false);
+
+const recalculateNewProductPricing = () => {
+  const cost = Number(newProduct.unit_cost ?? 0);
+  const marginPercentage = Number(newProduct.margin_percentage ?? 0);
+
+  if (!Number.isFinite(cost) || cost < 0 || !Number.isFinite(marginPercentage) || marginPercentage < 0) {
+    newProduct.margin_price = null;
+    newProduct.selling_price = null;
+    return;
+  }
+
+  const marginPrice = (cost * marginPercentage) / 100;
+  newProduct.margin_price = Number(marginPrice.toFixed(2));
+  newProduct.selling_price = Number((cost + marginPrice).toFixed(2));
+};
+
+watch(() => [newProduct.unit_cost, newProduct.margin_percentage], recalculateNewProductPricing);
 
 let searchTimer = null;
 const searchProducts = () => {
@@ -758,8 +800,14 @@ const addNewProduct = () => {
     newProductErrors.unit_cost = 'Required';
     valid = false;
   }
+  if (newProduct.margin_percentage === null || newProduct.margin_percentage === '' || newProduct.margin_percentage < 0) {
+    newProductErrors.margin_percentage = 'Required';
+    valid = false;
+  }
+
+  recalculateNewProductPricing();
   if (!newProduct.selling_price || newProduct.selling_price <= 0) {
-    newProductErrors.selling_price = 'Required';
+    newProductErrors.selling_price = 'Invalid value';
     valid = false;
   }
   if (!newProduct.quantity || newProduct.quantity < 1) {
@@ -780,6 +828,8 @@ const addNewProduct = () => {
     new_category_name: showNewCategoryInput.value ? newProduct.new_category_name : null,
     barcode: barcode,
     unit_cost: newProduct.unit_cost,
+    margin_percentage: newProduct.margin_percentage,
+    margin_price: newProduct.margin_price,
     selling_price: newProduct.selling_price,
     quantity: newProduct.quantity,
     current_stock: 0,
@@ -792,6 +842,8 @@ const addNewProduct = () => {
     new_category_name: '',
     barcode: '',
     unit_cost: null,
+    margin_percentage: null,
+    margin_price: null,
     selling_price: null,
     quantity: 1,
   });
@@ -863,6 +915,8 @@ const submit = () => {
           category_id: i.category_id || null,
           new_category_name: i.new_category_name || null,
           barcode: i.barcode || null,
+          margin_percentage: i.margin_percentage,
+          margin_price: i.margin_price,
           selling_price: i.selling_price,
           quantity: i.quantity,
           unit_cost: i.unit_cost,

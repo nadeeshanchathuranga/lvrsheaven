@@ -90,7 +90,9 @@ class GrnController extends Controller
             'items.*.category_id' => 'nullable|exists:categories,id',
             'items.*.new_category_name' => 'nullable|string|max:255',
             'items.*.barcode' => 'nullable|string|max:100',
-            'items.*.selling_price' => 'required_if:items.*.is_new_product,true|numeric|min:0',
+            'items.*.margin_percentage' => 'required_if:items.*.is_new_product,true|numeric|min:0',
+            'items.*.margin_price' => 'nullable|numeric|min:0',
+            'items.*.selling_price' => 'nullable|numeric|min:0',
             // Existing fields
             'items.*.quantity'  => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
@@ -118,6 +120,11 @@ class GrnController extends Controller
             foreach ($validated['items'] as $item) {
                 // Check if this is a new product that needs to be created
                 if (!empty($item['is_new_product']) && $item['is_new_product'] === true) {
+                    $costPrice = (float) $item['unit_cost'];
+                    $marginPercentage = (float) ($item['margin_percentage'] ?? 0);
+                    $marginPrice = round(($costPrice * $marginPercentage) / 100, 2);
+                    $sellingPrice = round($costPrice + $marginPrice, 2);
+
                     // Generate barcode if not provided, encoding the cost
                     if (empty($item['barcode'])) {
                         $item['barcode'] = $this->generateUniqueBarcode($item['unit_cost']);
@@ -131,7 +138,10 @@ class GrnController extends Controller
                         // Barcode already in DB — treat as existing, update stock only
                         $product->stock_quantity += $item['quantity'];
                         $product->total_quantity  = ($product->total_quantity ?? 0) + $item['quantity'];
-                        $product->cost_price      = $item['unit_cost'];
+                        $product->cost_price      = $costPrice;
+                        $product->margin_percentage = $marginPercentage;
+                        $product->margin_price    = $marginPrice;
+                        $product->selling_price   = $sellingPrice;
                         $product->purchase_date   = $validated['grn_date'];
                         $product->save();
                         $item['product_id'] = $product->id;
@@ -153,8 +163,10 @@ class GrnController extends Controller
                             'barcode'        => $item['barcode'],
                             'category_id'    => $categoryId,
                             'supplier_id'    => $validated['supplier_id'],
-                            'cost_price'     => $item['unit_cost'],
-                            'selling_price'  => $item['selling_price'],
+                            'cost_price'     => $costPrice,
+                            'margin_percentage' => $marginPercentage,
+                            'margin_price'   => $marginPrice,
+                            'selling_price'  => $sellingPrice,
                             'stock_quantity' => $item['quantity'],
                             'total_quantity' => $item['quantity'],
                             'purchase_date'  => $validated['grn_date'],
@@ -201,14 +213,14 @@ class GrnController extends Controller
     {
         do {
             $prefix = '955'; // Sri Lankan prefix
-            
+
             // Encode cost in 4 digits
             $costEncoded = str_pad((string) round($costPrice), 4, '0', STR_PAD_LEFT);
             $costEncoded = substr($costEncoded, -4); // Take last 4 digits
-            
+
             // Random 4-digit product identifier
             $productId = str_pad((string) rand(0, 9999), 4, '0', STR_PAD_LEFT);
-            
+
             // Calculate check digit (modulo 10)
             $digits = $prefix . $costEncoded . $productId;
             $sum = 0;
@@ -216,10 +228,10 @@ class GrnController extends Controller
                 $sum += (int) $digits[$i] * (($i % 2 === 0) ? 1 : 3);
             }
             $checkDigit = (10 - ($sum % 10)) % 10;
-            
+
             $barcode = $digits . $checkDigit;
         } while (Product::where('barcode', $barcode)->exists());
-        
+
         return $barcode;
     }
 
@@ -268,7 +280,7 @@ class GrnController extends Controller
     public function searchProduct(Request $request)
     {
         $query = $request->input('search', '');
-        
+
         if (empty($query)) {
             return response()->json(['products' => []]);
         }
