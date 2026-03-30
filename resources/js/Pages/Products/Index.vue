@@ -136,12 +136,12 @@
         </div>
       </div>
 
-      <div class="grid md:grid-cols-4 grid-cols-1 gap-8">
+      <div class="grid md:grid-cols-4 lg:grid-cols-5 grid-cols-1 gap-6">
         <template v-if="products.data.length > 0">
           <div
             v-for="product in products.data"
             :key="product.id"
-            class="space-y-4 text-white transition-transform duration-300 transform bg-black border-4 border-black shadow-lg hover:-translate-y-4"
+            class="overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-b from-slate-950 to-slate-900 text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
           >
             <div
               @click="
@@ -151,62 +151,46 @@
               "
               class="cursor-pointer"
             >
-              <!-- <img
-                :src="`/${product.image}`"
-                alt="Product Image"
-                class="object-cover w-full h-64"
-              /> -->
-
-              <img
-                :src="
-                  product.image
-                    ? `/${product.image}`
-                    : '/images/placeholder.jpg'
-                "
-                alt="Product Image"
-                class="object-cover w-full h-64"
-              />
+              <div class="px-4 pt-4 pb-3 border-b border-slate-800">
+                <div class="flex items-start justify-between gap-3">
+                  <p class="text-lg font-extrabold leading-6 tracking-wide text-white">
+                    {{ product.name || "N/A" }}
+                  </p>
+                  <p class="shrink-0 rounded-full bg-emerald-600 px-3 py-1 text-sm font-bold text-white">
+                    Rs. {{ Number(product.selling_price || 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                  </p>
+                </div>
+                <p class="mt-2 text-sm font-medium text-slate-300">
+                  Barcode: <span class="font-semibold text-slate-100">{{ product.barcode || "N/A" }}</span>
+                </p>
+              </div>
             </div>
-            <div class="px-2 py-4 space-y-4">
-              <div
-                class="flex items-start space-x-3 justify-between text-[11px] font-bold tracking-wide"
-              >
-                <p class="text-justify">{{ product.name || "N/A" }}</p>
-                <p
-                  class="px-3 text-white bg-green-700 py-2 rounded-full flex items-center"
-                >
-                  {{ product.selling_price || "N/A" }}
+            <div class="px-4 py-4 space-y-4">
+              <div class="rounded-xl bg-slate-800/70 px-3 py-2">
+                <p class="text-sm font-semibold text-slate-300">
+                  Supplier: <span class="font-bold text-white">{{ product.supplier?.name || "N/A" }}</span>
                 </p>
               </div>
 
-              <div class="flex items-center justify-center w-full space-x-4">
-                <p
-                  class="flex items-center space-x-2 text-justify text-gray-400"
-                >
-                  Supplier :
-
-                  <b> &nbsp; {{ product.supplier?.name || "N/A" }} </b>
-                </p>
-              </div>
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between gap-2">
                 <p
                   v-if="product.stock_quantity > 0"
-                  class="text-xl font-bold tracking-wider text-green-500"
+                  class="rounded-full bg-emerald-900/50 px-3 py-1 text-sm font-bold tracking-wide text-emerald-400"
                 >
                   <i class="ri-checkbox-blank-circle-fill"></i> In Stock ({{ product.stock_quantity }})
                 </p>
-                <p v-else class="text-xl font-bold tracking-wider text-red-500">
+                <p v-else class="rounded-full bg-red-900/40 px-3 py-1 text-sm font-bold tracking-wide text-red-400">
                   <i class="ri-checkbox-blank-circle-fill"></i> Out of Stock
                 </p>
 
                 <div class="flex justify-center">
                   <button
                     @click="openBarcodeQty(product)"
-                    class="flex items-center justify-center px-4 py-2 gap-2 text-white transition duration-200 bg-purple-600 rounded-lg cursor-pointer hover:bg-purple-700"
+                    class="flex items-center justify-center px-3 py-2 gap-2 text-sm font-semibold text-white transition duration-200 bg-indigo-600 rounded-lg cursor-pointer hover:bg-indigo-700"
                     title="Print Barcode Stickers"
                   >
-                    <i class="ri-barcode-line text-xl"></i>
-                    <span class="font-semibold">Print Barcode</span>
+                    <i class="ri-barcode-line text-lg"></i>
+                    <span>Print Barcode</span>
                   </button>
                 </div>
               </div>
@@ -466,7 +450,7 @@ const printAllBarcodes = () => {
   if (stockStatus.value) params.append('stockStatus', stockStatus.value);
   if (selectedCategory.value) params.append('selectedCategory', selectedCategory.value);
   if (selectedSupplier.value) params.append('selectedSupplier', selectedSupplier.value);
-  
+
   window.open(`/barcode-sticker-bulk?${params.toString()}`, '_blank');
 };
 

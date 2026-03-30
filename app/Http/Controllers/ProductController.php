@@ -68,7 +68,7 @@ class ProductController extends Controller
                 $queryBuilder->where('category_id', $selectedCategory);
             });
 
-        $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
+        $products = $productsQuery->orderBy('created_at', 'desc')->paginate(60);
 
         return response()->json([
             'products' => $products,
@@ -115,7 +115,7 @@ class ProductController extends Controller
 
         $count = $productsQuery->count();
 
-        $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
+        $products = $productsQuery->orderBy('created_at', 'desc')->paginate(60);
 
         $allcategories = Category::orderBy('name')->get(['id', 'name']);
         $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
@@ -525,7 +525,7 @@ public function fetchProducts2(Request $request)
         $productsQuery->orderBy('products.created_at', 'desc');
     }
 
-    $products = $productsQuery->paginate(8);
+    $products = $productsQuery->paginate(60);
 
 
     return response()->json([
