@@ -1,4 +1,4 @@
-﻿<style>
+<style>
 /* General DataTables Pagination Container Style */
 .dataTables_wrapper .dataTables_paginate {
   display: flex;
@@ -101,6 +101,7 @@
                 <th class="p-4 font-semibold tracking-wide text-right uppercase">Total Purchases</th>
                 <th class="p-4 font-semibold tracking-wide text-right uppercase">Total Paid</th>
                 <th class="p-4 font-semibold tracking-wide text-right uppercase">Outstanding</th>
+                <th class="p-4 font-semibold tracking-wide text-center uppercase">Status</th>
                 <th class="p-4 font-semibold tracking-wide text-center uppercase">Actions</th>
               </tr>
             </thead>
@@ -120,18 +121,26 @@
                   {{ formatCurrency(supplier.outstanding ?? 0) }}
                 </td>
                 <td class="p-4 text-center border-t border-gray-200">
+                  <span
+                    :class="supplier.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                    class="px-3 py-1 rounded-full text-xs font-bold uppercase"
+                  >
+                    {{ supplier.status || 'Active' }}
+                  </span>
+                </td>
+                <td class="p-4 text-center border-t border-gray-200">
                   <div class="inline-flex items-center space-x-2">
                     <Link :href="`/grn?supplier_id=${supplier.id}`" class="px-3 py-1 bg-green-500 text-white rounded-lg text-xs hover:bg-green-600 transition">GRNs</Link>
                     <button
-                      :class="HasRole([`Admin`]) ? `px-3 py-1 bg-blue-500 text-white rounded-lg text-xs` : `px-3 py-1 bg-blue-300 text-white rounded-lg text-xs cursor-not-allowed`"
-                      :disabled="!HasRole([`Admin`])"
+                      :class="HasRole([`Admin`]) && supplier.status !== 'Inactive' ? `px-3 py-1 bg-blue-500 text-white rounded-lg text-xs` : `px-3 py-1 bg-blue-300 text-white rounded-lg text-xs cursor-not-allowed`"
+                      :disabled="!HasRole([`Admin`]) || supplier.status === 'Inactive'"
                       @click="() => { if (HasRole([`Admin`])) openEditModal(supplier); }"
                     >Edit</button>
                     <button
-                      :class="HasRole([`Admin`]) ? `px-3 py-1 bg-red-500 text-white rounded-lg text-xs` : `px-3 py-1 bg-red-300 text-white rounded-lg text-xs cursor-not-allowed`"
-                      :disabled="!HasRole([`Admin`])"
+                      :class="HasRole([`Admin`]) && supplier.status !== 'Inactive' ? `px-3 py-1 bg-red-500 text-white rounded-lg text-xs` : `px-3 py-1 bg-red-300 text-white rounded-lg text-xs cursor-not-allowed`"
+                      :disabled="!HasRole([`Admin`]) || supplier.status === 'Inactive'"
                       @click="() => { if (HasRole([`Admin`])) openDeleteModal(supplier); }"
-                    >Delete</button>
+                    >Deactivate</button>
                   </div>
                 </td>
               </tr>
@@ -194,7 +203,7 @@ $(document).ready(function () {
     dom: "Bfrtip",
     pageLength: 10,
     buttons: [],
-    columnDefs: [{ targets: [3, 6, 7, 8, 9], searchable: false, orderable: false }],
+    columnDefs: [{ targets: [3, 6, 7, 8, 9, 10], searchable: false, orderable: false }],
     initComplete: function () {
       let searchInput = $("div.dataTables_filter input");
       searchInput.attr("placeholder", "Search ...");

@@ -28,6 +28,7 @@ class SupplierController extends Controller
                 $supplier->total_purchases = (float) ($supplier->grns_sum_total_amount ?? 0);
                 $supplier->total_paid      = (float) ($supplier->payments_sum_amount ?? 0);
                 $supplier->outstanding     = $supplier->total_purchases - $supplier->total_paid;
+                $supplier->status          = 'Active';
                 return $supplier;
             });
 
@@ -174,12 +175,13 @@ class SupplierController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        if ($supplier->image && Storage::disk('public')->exists(str_replace('storage/', '', $supplier->image))) {
-            Storage::disk('public')->delete(str_replace('storage/', '', $supplier->image));
+        if ($supplier->trashed()) {
+            return redirect()->route('suppliers.index')->dangerBanner('Supplier is already inactive.');
         }
 
+        // Deactivate supplier (soft delete) instead of hard deleting to avoid FK conflicts.
         $supplier->delete();
 
-        return redirect()->route('suppliers.index')->banner('Supplier deleted successfully.');
+        return redirect()->route('suppliers.index')->banner('Supplier deactivated successfully.');
     }
 }
