@@ -82,19 +82,11 @@
       width:  30mm;
       height: 16mm;
       overflow: hidden;
-      position: relative;        /* anchor for the absolute supplier strip */
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0.5mm 0.8mm;
+      flex-direction: row;       /* main content + supplier strip side by side */
+      align-items: stretch;
       border: 0.3mm dashed #bbb; /* cut-guide on screen */
       background: #fff;
-    }
-
-    /* when a supplier strip is present, shift content left to avoid overlap */
-    .sticker.has-supplier {
-      padding-right: 5mm;
     }
 
     @media print {
@@ -103,6 +95,17 @@
         page-break-inside: avoid;
         break-inside: avoid;
       }
+    }
+
+    /* ─── Main content area (name + barcode + price) ─── */
+    .sticker-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5mm 0.8mm;
     }
 
     .sticker-name {
@@ -114,20 +117,23 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 28.5mm;
+      max-width: 27mm;
       margin-bottom: 0.4mm;
     }
 
     .sticker svg {
       display: block;
-      width:  28mm;
+      width:  27mm;
       height: 8mm;
     }
 
-    /* When supplier strip is shown (4.5mm right column), shrink SVG to fit remaining content area */
-    /* Content area = 30mm - 0.8mm left padding - 5mm right padding = 24.2mm → use 23.5mm with margin */
-    .sticker.has-supplier svg {
-      width: 23.5mm;
+    /* When supplier strip is present, shrink content to fit the remaining area */
+    .sticker.has-supplier .sticker-main svg {
+      width: 22mm;
+    }
+
+    .sticker.has-supplier .sticker-name {
+      max-width: 22mm;
     }
 
     .sticker-price {
@@ -144,13 +150,10 @@
       letter-spacing: 0.3pt;
     }
 
-    /* ─── Right supplier code strip (absolute overlay) ─── */
+    /* ─── Right supplier code strip ─── */
     .sticker-supplier {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
       width: 4.5mm;
+      min-width: 4.5mm;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -205,9 +208,11 @@
     <div class="sticker-grid">
       @for ($i = 0; $i < $qty; $i++)
       <div class="sticker {{ $supplierCode ? 'has-supplier' : '' }}">
-        <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
-        <svg id="bc-{{ $i }}" data-barcode="{{ $barcode }}"></svg>
-        <div class="sticker-price">Rs. {{ $price }}</div>
+        <div class="sticker-main">
+          <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
+          <svg id="bc-{{ $i }}" data-barcode="{{ $barcode }}"></svg>
+          <div class="sticker-price">Rs. {{ $price }}</div>
+        </div>
         @if($supplierCode)
         <div class="sticker-supplier">{{ $supplierCode }}</div>
         @endif
