@@ -147,7 +147,7 @@
       position: absolute;
       right: 0;
       top: 0;
-      bottom: 0;
+      height: 16mm;
       width: 4.5mm;
       display: flex;
       align-items: center;
