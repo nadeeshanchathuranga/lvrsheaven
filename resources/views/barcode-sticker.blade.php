@@ -68,7 +68,7 @@
 
     @media print {
       .toolbar    { display: none; }
-      .sheet-wrap { display: block; padding: 0; }
+      .sheet-wrap { display: block; padding: 0; min-height: auto; }
       body        { background: #fff; width: 96mm; }
       .sticker-grid {
         transform: none;
