@@ -53,7 +53,7 @@
       display: grid;
       grid-template-columns: repeat(3, 30mm);
       grid-auto-rows: 16mm;
-      row-gap: 3mm; /* physical gap between label rows on roll */
+      row-gap: 5mm; /* physical gap between label rows on roll */
       column-gap: 3mm; /* physical gap between label columns on roll */
       transform: scale(3);
       transform-origin: top left;
