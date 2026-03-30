@@ -39,7 +39,8 @@
     /* ─── Wrapper: centres the grid on screen ─── */
     .sheet-wrap {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       padding: 32px;
       overflow-x: auto;
     }
@@ -49,16 +50,6 @@
       display: flex;
       gap: 3mm;
       width: fit-content;
-    }
-
-    /* Page break after every row when printing */
-    @media print {
-      .sticker-row {
-        page-break-after: always;
-      }
-      .sticker-row:last-child {
-        page-break-after: auto;
-      }
     }
 
     /* Screen-only: scale up so stickers are comfortable to preview */
@@ -78,8 +69,9 @@
     .sticker {
       width:  30mm;
       height: 16mm;
-      min-height: 0;          /* override grid default min-height:auto */
+      min-height: 0;
       max-height: 16mm;
+      flex-shrink: 0;
       overflow: hidden;
       position: relative;
       display: flex;
