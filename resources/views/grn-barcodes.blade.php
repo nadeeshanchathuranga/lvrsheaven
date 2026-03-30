@@ -50,7 +50,7 @@
       grid-template-columns: repeat(3, 30mm);
       grid-auto-rows: 16mm;
       row-gap: 0; /* continuous roll – no vertical gap */
-      column-gap: 3mm; /* 3 cols × 30mm + 2 gaps × 3mm = 96mm */
+      column-gap: 5mm; /* 3 cols × 30mm + 2 gaps × 5mm = 100mm */
     }
 
     /* Screen-only: scale up so stickers are comfortable to preview */
@@ -63,11 +63,11 @@
     @media print {
       .toolbar    { display: none; }
       .sheet-wrap { display: block; padding: 0; margin: 0; overflow: visible; }
-      body        { background: #fff; width: 96mm; margin: 0; padding: 0; }
+      body        { background: #fff; width: 100mm; margin: 0; padding: 0; }
       .sticker-grid {
         margin: 0;
         padding: 0;
-        width: 96mm;
+        width: 100mm;
       }
     }
 
@@ -145,7 +145,7 @@
   {{-- Dynamic page size: one tall page that fits ALL rows – no page breaks --}}
   <style>
     @page {
-      size: 96mm {{ $pageHeight }}mm;
+      size: 100mm {{ $pageHeight }}mm;
       margin: 0;
     }
   </style>
