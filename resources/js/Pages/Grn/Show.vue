@@ -46,6 +46,10 @@
           @click="printBarcodes"
           class="px-5 py-2 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition"
         >🏷️ Print Barcodes</button>
+        <button
+          @click="downloadGrnPdf"
+          class="px-5 py-2 bg-orange-600 text-white rounded-xl font-semibold text-sm hover:bg-orange-700 transition"
+        >📄 Download PDF</button>
       </div>
 
       <!-- GRN Details Card -->
@@ -102,7 +106,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Search by product name, code, or barcode..."
+              placeholder="Search by product name or barcode..."
               class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <svg v-if="searchQuery" @click="searchQuery = ''" class="absolute right-3 top-2.5 h-5 w-5 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -133,7 +137,6 @@
                 <td class="px-6 py-4 text-gray-400">{{ idx + 1 }}</td>
                 <td class="px-6 py-4">
                   <p class="font-semibold text-gray-800">{{ item.product?.name ?? '—' }}</p>
-                  <p class="text-xs text-gray-400">Code: {{ item.product?.code ?? 'N/A' }}</p>
                 </td>
                 <td class="px-6 py-4">
                   <span class="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
@@ -289,6 +292,8 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import Header from '@/Components/custom/Header.vue';
 import Footer from '@/Components/custom/Footer.vue';
 import Banner from '@/Components/Banner.vue';
@@ -305,6 +310,89 @@ const showBarcodeModal = ref(props.justCreated);
 const printBarcodes = () => {
   showBarcodeModal.value = false;
   window.open(`/grn/${props.grn.id}/barcodes`, '_blank');
+};
+
+const safeFilePart = (text) => String(text ?? '')
+  .replace(/[^a-zA-Z0-9-_]+/g, '_')
+  .replace(/^_+|_+$/g, '');
+
+const downloadGrnPdf = () => {
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Goods Received Note', 14, 16);
+
+  doc.setFontSize(12);
+  doc.text(String(props.grn.grn_number || 'GRN'), pageWidth - 14, 16, { align: 'right' });
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Supplier: ${props.grn.supplier?.name ?? '-'}`, 14, 26);
+  doc.text(`Date: ${formatDate(props.grn.grn_date)}`, 14, 32);
+  doc.text(`Reference: ${props.grn.reference_no || '-'}`, 14, 38);
+  doc.text(`Created By: ${props.grn.created_by?.name ?? '-'}`, 14, 44);
+
+  const items = props.grn.items || [];
+  const rows = items.map((item, idx) => [
+    idx + 1,
+    item.product?.name ?? '-',
+    item.product?.barcode ?? 'N/A',
+    item.quantity,
+    Number(item.unit_cost ?? 0).toFixed(2),
+    Number(item.product?.selling_price ?? 0).toFixed(2),
+    Number(item.total_cost ?? 0).toFixed(2),
+  ]);
+
+  doc.autoTable({
+    startY: 50,
+    head: [['#', 'Product', 'Barcode', 'Qty', 'Unit Cost', 'Selling Price', 'Line Total']],
+    body: rows,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [37, 99, 235] },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 10 },
+      3: { halign: 'center', cellWidth: 14 },
+      4: { halign: 'right', cellWidth: 22 },
+      5: { halign: 'right', cellWidth: 24 },
+      6: { halign: 'right', cellWidth: 22 },
+    },
+  });
+
+  const endY = doc.lastAutoTable?.finalY ?? 60;
+  const totalAmount = Number(props.grn.total_amount ?? 0);
+  const paidAmount = Number(props.grn.paid_amount ?? 0);
+  const balAmount = totalAmount - paidAmount;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Total Amount: Rs. ${totalAmount.toFixed(2)}`, pageWidth - 14, endY + 10, { align: 'right' });
+  doc.text(`Total Paid: Rs. ${paidAmount.toFixed(2)}`, pageWidth - 14, endY + 16, { align: 'right' });
+  doc.text(`Outstanding: Rs. ${balAmount.toFixed(2)}`, pageWidth - 14, endY + 22, { align: 'right' });
+
+  if ((props.grn.payments || []).length > 0) {
+    const paymentRows = (props.grn.payments || []).map((payment) => [
+      formatDate(payment.payment_date),
+      payment.payment_method?.replace('_', ' ') || '-',
+      Number(payment.amount ?? 0).toFixed(2),
+      payment.notes || '-',
+      payment.created_by?.name ?? '-',
+    ]);
+
+    doc.autoTable({
+      startY: endY + 30,
+      head: [['Payment Date', 'Method', 'Amount', 'Notes', 'Recorded By']],
+      body: paymentRows,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [22, 163, 74] },
+      columnStyles: {
+        2: { halign: 'right', cellWidth: 24 },
+      },
+    });
+  }
+
+  const fileNo = safeFilePart(props.grn.grn_number || 'grn');
+  doc.save(`${fileNo}.pdf`);
 };
 
 const searchQuery = ref('');
@@ -385,4 +473,11 @@ const statusClass = (status) => {
   if (status === 'partial') return 'bg-yellow-100 text-yellow-700';
   return 'bg-red-100 text-red-700';
 };
+
+onMounted(() => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('download') === '1') {
+    setTimeout(() => downloadGrnPdf(), 250);
+  }
+});
 </script>

@@ -130,9 +130,19 @@
               </td>
               <td class="p-4 text-center text-gray-600">{{ grn.items_count }}</td>
               <td class="p-4 text-center">
-                <Link :href="`/grn/${grn.id}`" class="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700 transition">
-                  View
-                </Link>
+                <div class="flex items-center justify-center gap-2">
+                  <Link :href="`/grn/${grn.id}`" class="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700 transition">
+                    View
+                  </Link>
+                  <a
+                    :href="`/grn/${grn.id}?download=1`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="px-3 py-1 bg-orange-600 text-white rounded-lg text-xs hover:bg-orange-700 transition"
+                  >
+                    PDF
+                  </a>
+                </div>
               </td>
             </tr>
             <tr v-if="grns.data.length === 0">

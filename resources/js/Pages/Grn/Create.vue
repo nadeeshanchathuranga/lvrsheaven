@@ -18,8 +18,9 @@
           <button
             v-if="form.items.length > 0"
             @click="pauseGrn"
+            :disabled="isPausing"
             type="button"
-            class="px-5 py-2 bg-orange-500 text-white border border-orange-600 rounded-xl font-semibold text-base hover:bg-orange-600 transition"
+            class="px-5 py-2 bg-orange-500 text-white border border-orange-600 rounded-xl font-semibold text-base hover:bg-orange-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >⏸ Pause GRN</button>
           <!-- Clear form -->
           <button
@@ -128,7 +129,7 @@
           <h3 class="text-2xl font-bold text-gray-700 mb-5">Add Products</h3>
           <div class="flex flex-wrap gap-4 items-end mb-6">
             <div class="flex-1 min-w-64 relative">
-              <label class="block text-xl font-bold text-gray-700 mb-3">Search Existing Product (Barcode/Name/Code)</label>
+              <label class="block text-xl font-bold text-gray-700 mb-3">Search Existing Product (Barcode/Name)</label>
               <input
                 v-model="productSearch"
                 @input="searchProducts"
@@ -150,7 +151,7 @@
                   class="px-6 py-4 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0"
                 >
                   <p class="font-bold text-lg text-gray-800">{{ p.name }}</p>
-                  <p class="text-base text-gray-400 mt-1">Code: {{ p.code || 'N/A' }} | Barcode: {{ p.barcode || 'N/A' }} | Stock: {{ p.stock_quantity }} | Cost: Rs. {{ p.cost_price }}</p>
+                  <p class="text-base text-gray-400 mt-1">Barcode: {{ p.barcode || 'N/A' }} | Stock: {{ p.stock_quantity }} | Cost: Rs. {{ p.cost_price }}</p>
                 </div>
               </div>
               <p v-if="searching" class="text-base text-gray-400 mt-2">Searching...</p>
@@ -290,7 +291,6 @@
                   <td class="px-6 py-4 text-gray-500 text-lg">{{ idx + 1 }}</td>
                   <td class="px-6 py-4">
                     <p class="font-bold text-xl text-gray-800">{{ item.product_name || item.name }}</p>
-                    <p class="text-base text-gray-400">{{ item.product_code || item.code || 'New Product' }}</p>
                     <span v-if="item.is_new_product" class="inline-block mt-1 px-3 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded">NEW</span>
                   </td>
                   <td class="px-6 py-4">
@@ -360,8 +360,9 @@
           <button
             v-if="form.items.length > 0"
             @click="pauseGrn"
+            :disabled="isPausing"
             type="button"
-            class="px-8 py-4 bg-orange-500 text-white rounded-xl font-bold text-lg hover:bg-orange-600 transition"
+            class="px-8 py-4 bg-orange-500 text-white rounded-xl font-bold text-lg hover:bg-orange-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >⏸ Pause &amp; Continue Later</button>
           <div class="flex gap-4 ml-auto">
             <Link href="/grn" class="px-10 py-4 bg-gray-200 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-300 transition">
@@ -407,11 +408,59 @@ const PAUSED_DRAFTS_KEY = 'grn_paused_drafts';
 const draftRestored  = ref(false);
 const resumedFromId  = ref(null);
 const pausedDrafts   = ref([]);
+const isPausing      = ref(false);
+
+const buildDraftLabel = (supplierName, grnDate, referenceNo) =>
+  `${supplierName} — ${grnDate}${referenceNo ? ' / ' + referenceNo : ''}`;
+
+const draftSignature = (draft) => {
+  const items = Array.isArray(draft?.items)
+    ? draft.items.map((i) => ({
+        product_id: i.product_id ?? null,
+        name: i.name ?? null,
+        barcode: i.barcode ?? null,
+        quantity: Number(i.quantity ?? 0),
+        unit_cost: Number(i.unit_cost ?? 0),
+      }))
+    : [];
+
+  return JSON.stringify({
+    supplier_id: draft?.supplier_id ?? null,
+    grn_date: draft?.grn_date ?? null,
+    reference_no: draft?.reference_no ?? null,
+    notes: draft?.notes ?? null,
+    items,
+  });
+};
+
+const dedupePausedDrafts = (drafts) => {
+  const seenSignature = new Set();
+  const seenLabel = new Set();
+  const unique = [];
+
+  for (const draft of drafts) {
+    const signatureKey = draftSignature(draft);
+    const labelKey = String(draft?.label ?? '');
+
+    if (seenSignature.has(signatureKey)) continue;
+    if (labelKey && seenLabel.has(labelKey)) continue;
+
+    seenSignature.add(signatureKey);
+    if (labelKey) seenLabel.add(labelKey);
+    unique.push(draft);
+  }
+
+  return unique;
+};
 
 // ── Load paused drafts list ──
 try {
   const list = localStorage.getItem(PAUSED_DRAFTS_KEY);
-  if (list) pausedDrafts.value = JSON.parse(list);
+  if (list) {
+    const parsed = JSON.parse(list);
+    pausedDrafts.value = dedupePausedDrafts(Array.isArray(parsed) ? parsed : []);
+    localStorage.setItem(PAUSED_DRAFTS_KEY, JSON.stringify(pausedDrafts.value));
+  }
 } catch (e) {}
 
 const savePausedList = () => {
@@ -466,44 +515,72 @@ const clearDraft = () => {
 
 // ── Pause: save current form as a named draft slot ──
 const pauseGrn = () => {
+  if (isPausing.value) return;
   if (form.items.length === 0 && !form.supplier_id) return;
 
-  const supplierObj  = props.suppliers?.find(s => s.id == form.supplier_id);
-  const supplierName = supplierObj ? supplierObj.name : 'No Supplier';
-  const now          = new Date();
-  const dateStr      = now.toLocaleDateString('en-LK', { day:'2-digit', month:'short', year:'numeric' });
-  const timeStr      = now.toLocaleTimeString('en-LK', { hour:'2-digit', minute:'2-digit' });
-  const total        = form.items.reduce((sum, i) => sum + (parseFloat(i.quantity)||0)*(parseFloat(i.unit_cost)||0), 0);
+  isPausing.value = true;
 
-  const entry = {
-    id:          Date.now().toString(),
-    label:       `${supplierName} — ${form.grn_date}${form.reference_no ? ' / ' + form.reference_no : ''}`,
-    paused_at:   now.toISOString(),
-    item_count:  form.items.length,
-    grand_total: total,
-    supplier_id:  form.supplier_id,
-    grn_date:     form.grn_date,
-    reference_no: form.reference_no,
-    notes:        form.notes,
-    items:        JSON.parse(JSON.stringify(form.items)),
-  };
+  try {
+    const supplierObj  = props.suppliers?.find(s => s.id == form.supplier_id);
+    const supplierName = supplierObj ? supplierObj.name : 'No Supplier';
+    const now          = new Date();
+    const total        = form.items.reduce((sum, i) => sum + (parseFloat(i.quantity)||0)*(parseFloat(i.unit_cost)||0), 0);
 
-  // If we're resuming an existing paused draft, replace it in-place
-  if (resumedFromId.value) {
-    const idx = pausedDrafts.value.findIndex(d => d.id === resumedFromId.value);
-    if (idx !== -1) {
-      entry.id = resumedFromId.value;
-      pausedDrafts.value[idx] = entry;
+    const label = buildDraftLabel(supplierName, form.grn_date, form.reference_no);
+
+    const entry = {
+      id:          Date.now().toString(),
+      label,
+      paused_at:   now.toISOString(),
+      item_count:  form.items.length,
+      grand_total: total,
+      supplier_id:  form.supplier_id,
+      grn_date:     form.grn_date,
+      reference_no: form.reference_no,
+      notes:        form.notes,
+      items:        JSON.parse(JSON.stringify(form.items)),
+    };
+
+    // If we're resuming an existing paused draft, replace it in-place
+    if (resumedFromId.value) {
+      const idx = pausedDrafts.value.findIndex(d => d.id === resumedFromId.value);
+      if (idx !== -1) {
+        entry.id = resumedFromId.value;
+        pausedDrafts.value[idx] = entry;
+      } else {
+        // Fallback: if resume target missing, upsert by label
+        const labelIdx = pausedDrafts.value.findIndex((d) => d.label === label);
+        if (labelIdx !== -1) {
+          entry.id = pausedDrafts.value[labelIdx].id;
+          pausedDrafts.value[labelIdx] = entry;
+        } else {
+          pausedDrafts.value.unshift(entry);
+        }
+      }
     } else {
-      pausedDrafts.value.unshift(entry);
+      // Prevent duplicates: keep one draft per label, else fallback to same-content matching
+      const labelIdx = pausedDrafts.value.findIndex((d) => d.label === label);
+      if (labelIdx !== -1) {
+        entry.id = pausedDrafts.value[labelIdx].id;
+        pausedDrafts.value[labelIdx] = entry;
+      } else {
+        const sameIdx = pausedDrafts.value.findIndex((d) => draftSignature(d) === draftSignature(entry));
+        if (sameIdx !== -1) {
+          entry.id = pausedDrafts.value[sameIdx].id;
+          pausedDrafts.value[sameIdx] = entry;
+        } else {
+          pausedDrafts.value.unshift(entry);
+        }
+      }
     }
-  } else {
-    pausedDrafts.value.unshift(entry);
-  }
 
-  savePausedList();
-  clearDraft();
-  alert(`GRN paused with ${entry.item_count} item(s). You can resume it from the "Saved Drafts" panel.`);
+    pausedDrafts.value = dedupePausedDrafts(pausedDrafts.value);
+    savePausedList();
+    clearDraft();
+    alert(`GRN paused with ${entry.item_count} item(s). You can resume it from the "Saved Drafts" panel.`);
+  } finally {
+    isPausing.value = false;
+  }
 };
 
 // ── Resume a paused draft into the active form ──
@@ -607,14 +684,14 @@ const generateBatchNo = () => {
 // Last digit: check digit
 const generateBarcode = (costPrice) => {
   const prefix = '955'; // Sri Lankan prefix
-  
+
   // Encode cost in 4 digits (scale up and limit to 4 digits)
   // For example: cost 1234.56 -> 1235, cost 45.80 -> 0046
   const costEncoded = String(Math.round(costPrice)).padStart(4, '0').slice(-4);
-  
+
   // Random 4-digit product identifier
   const productId = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-  
+
   // Calculate check digit (simple modulo 10)
   const digits = prefix + costEncoded + productId;
   let sum = 0;
@@ -622,7 +699,7 @@ const generateBarcode = (costPrice) => {
     sum += parseInt(digits[i]) * (i % 2 === 0 ? 1 : 3);
   }
   const checkDigit = (10 - (sum % 10)) % 10;
-  
+
   return prefix + costEncoded + productId + checkDigit;
 };
 
@@ -719,7 +796,7 @@ const addNewProduct = () => {
     quantity: 1,
   });
   showNewCategoryInput.value = false;
-  
+
   productSearch.value = '';
 };
 
