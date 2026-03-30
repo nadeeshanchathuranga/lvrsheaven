@@ -100,11 +100,11 @@
     }
 
     .sticker-name {
-      font-size: 3.5pt;
+      font-size: 4.2pt;
       font-weight: 700;
       color: #000;
       text-align: center;
-      line-height: 1.1;
+      line-height: 1.2;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -120,7 +120,7 @@
     }
 
     .sticker-price {
-      font-size: 4.5pt;
+      font-size: 5pt;
       font-weight: 800;
       color: #000;
     }
@@ -184,10 +184,10 @@
         JsBarcode(el, el.getAttribute('data-barcode'), {
           format:       'CODE128',
           width:        0.9,
-          height:       14,
+          height:       16,
           displayValue: true,
           fontSize:     6,
-          margin:       0,
+          margin:       1,
           lineColor:    '#000',
           background:   '#fff',
         });
