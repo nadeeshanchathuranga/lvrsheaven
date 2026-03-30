@@ -80,8 +80,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding-top: 1mm;
+      justify-content: center;
       border: 0.3mm dashed #bbb;
       background: #fff;
     }
