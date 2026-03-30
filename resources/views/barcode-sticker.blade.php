@@ -49,27 +49,28 @@
     }
 
     /* ─── The sticker grid ─── */
-    /*
-      On SCREEN we scale up 3× so stickers are comfortable to view.
-      On PRINT  we reset to exact mm and let the @page handle the rest.
-    */
     .sticker-grid {
       display: grid;
       grid-template-columns: repeat(3, 30mm);   /* exactly 3 columns */
       grid-auto-rows: 16mm;
+      row-gap: 0;                               /* continuous roll – no vertical gap */
       column-gap: 3mm;                          /* 3 cols × 30mm + 2 gaps × 3mm = 96mm */
-      /* scale up for screen readability – zoom (unlike transform)
-         actually changes the layout box so rows don't overlay */
-      zoom: 3;
+    }
+
+    /* Screen-only: scale up so stickers are comfortable to preview */
+    @media screen {
+      .sticker-grid {
+        zoom: 3;
+      }
     }
 
     @media print {
       .toolbar    { display: none; }
-      .sheet-wrap { display: block; padding: 0; min-height: auto; }
-      body        { background: #fff; width: 96mm; }
+      .sheet-wrap { display: block; padding: 0; margin: 0; overflow: visible; }
+      body        { background: #fff; width: 96mm; margin: 0; padding: 0; }
       .sticker-grid {
-        zoom: 1;
         margin: 0;
+        padding: 0;
         width: 96mm;
       }
     }
