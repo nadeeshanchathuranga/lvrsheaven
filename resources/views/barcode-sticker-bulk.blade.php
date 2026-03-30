@@ -48,7 +48,6 @@
     /* ─── Row of 3 stickers ─── */
     .sticker-row {
       display: flex;
-      gap: 3mm;
       width: fit-content;
     }
 
