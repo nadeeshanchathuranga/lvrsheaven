@@ -95,11 +95,11 @@
 
     /* ─── Main content area – always full width, supplier strip overlays on top ─── */
     .sticker-name {
-      font-size: 4.2pt;
+      font-size: 3.5pt;
       font-weight: 700;
       color: #000;
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -115,7 +115,7 @@
     }
 
     .sticker-price {
-      font-size: 5pt;
+      font-size: 4.5pt;
       font-weight: 800;
       color: #000;
     }
@@ -195,10 +195,10 @@
         JsBarcode(el, el.getAttribute('data-barcode'), {
           format:       'CODE128',
           width:        0.9,
-          height:       16,
+          height:       14,
           displayValue: true,
           fontSize:     6,
-          margin:       1,
+          margin:       0,
           lineColor:    '#000',
           background:   '#fff',
         });
