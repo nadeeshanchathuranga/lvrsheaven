@@ -196,7 +196,9 @@
   {{-- CSS variable to compensate transform scale height --}}
   <style>
     .sticker-grid { --rows: {{ $rows }}; }
-    .sheet-wrap   { min-height: calc({{ $rows }} * 16mm * 3 + 80px); }
+    @media screen {
+      .sheet-wrap { min-height: calc({{ $rows }} * 16mm * 3 + 80px); }
+    }
   </style>
 
   <div class="sheet-wrap">
