@@ -94,15 +94,6 @@
     }
 
     /* ─── Main content area – always full width, supplier strip overlays on top ─── */
-    .sticker-main {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0.5mm 0.8mm;
-    }
-
     .sticker-name {
       font-size: 4.2pt;
       font-weight: 700;
@@ -112,13 +103,12 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 27mm;
-      margin-bottom: 0.4mm;
+      max-width: 28mm;
     }
 
     .sticker svg {
       display: block;
-      width:  27mm;
+      width: 28mm;
       height: 8mm;
     }
 
@@ -126,41 +116,16 @@
       font-size: 5pt;
       font-weight: 800;
       color: #000;
-      margin-top: 0.3mm;
     }
 
-    .sticker-code {
-      font-size: 3.5pt;
-      color: #555;
-      margin-top: 0.1mm;
-      letter-spacing: 0.3pt;
-    }
-
-    /* ─── Right supplier code strip (absolute overlay, does not affect content layout) ─── */
     .sticker-supplier {
-      position: absolute;
-      right: 0;
-      top: 0;
-      height: 16mm;
-      width: 4.5mm;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
       font-size: 3.5pt;
-      font-weight: 600;
       color: #555;
-      letter-spacing: 0.4pt;
-      border-left: 0.2mm solid #ddd;
-      overflow: hidden;
-      white-space: nowrap;
-      background: #fff;
     }
 
     @media print {
       .sticker-supplier {
-        /* border already set above */
+        /* no extra styles needed */
       }
     }
   </style>
@@ -205,15 +170,11 @@
         @endphp
         
         @for ($i = 0; $i < $qty; $i++)
-        <div class="sticker {{ $supplierCode ? 'has-supplier' : '' }}">
-          <div class="sticker-main">
-            <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
-            <svg id="bc-{{ $stickerIndex++ }}" data-barcode="{{ $barcode }}"></svg>
-            <div class="sticker-price">Rs. {{ $price }}</div>
-          </div>
-          @if($supplierCode)
-          <div class="sticker-supplier">{{ $supplierCode }}</div>
-          @endif
+        <div class="sticker">
+          <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
+          <svg id="bc-{{ $stickerIndex++ }}" data-barcode="{{ $barcode }}"></svg>
+          <div class="sticker-price">Rs. {{ $price }}</div>
+          @if($supplierCode)<div class="sticker-supplier">{{ $supplierCode }}</div>@endif
         </div>
         @endfor
       @endforeach
