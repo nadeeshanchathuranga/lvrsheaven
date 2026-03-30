@@ -6,7 +6,7 @@
   <title>GRN Barcodes – {{ $grn->grn_number }}</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
-    /* @page is set dynamically below after we know the row count */
+    @page { size: auto; margin: 0; }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -44,18 +44,26 @@
       overflow-x: auto;
     }
 
-    /* ─── The sticker grid ─── */
-    .sticker-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 30mm);
-      grid-auto-rows: 16mm;
-      row-gap: 0; /* continuous roll – no vertical gap */
-      column-gap: 3mm; /* 3 cols × 30mm + 2 gaps × 3mm = 96mm */
+    /* ─── Row of 3 stickers ─── */
+    .sticker-row {
+      display: flex;
+      gap: 3mm;
+      width: fit-content;
+    }
+
+    /* Page break after every row when printing */
+    @media print {
+      .sticker-row {
+        page-break-after: always;
+      }
+      .sticker-row:last-child {
+        page-break-after: auto;
+      }
     }
 
     /* Screen-only: scale up so stickers are comfortable to preview */
     @media screen {
-      .sticker-grid {
+      .sheet-wrap {
         zoom: 3;
       }
     }
@@ -63,12 +71,7 @@
     @media print {
       .toolbar    { display: none; }
       .sheet-wrap { display: block; padding: 0; margin: 0; overflow: visible; }
-      body        { background: #fff; width: 96mm; margin: 0; padding: 0; }
-      .sticker-grid {
-        margin: 0;
-        padding: 0;
-        width: 96mm;
-      }
+      body        { background: #fff; margin: 0; padding: 0; }
     }
 
     /* ─── Single sticker ─── */
@@ -138,17 +141,7 @@
     foreach ($items as $item) {
       $totalStickers += max(1, $item->grn_quantity ?? 1);
     }
-    $rows       = (int) ceil($totalStickers / 3);
-    $pageHeight = $rows * 16; // total height in mm
   @endphp
-
-  {{-- Dynamic page size: one tall page that fits ALL rows – no page breaks --}}
-  <style>
-    @page {
-      size: 96mm {{ $pageHeight }}mm;
-      margin: 0;
-    }
-  </style>
 
   <div class="toolbar">
     <div>
@@ -159,29 +152,31 @@
   </div>
 
   <div class="sheet-wrap">
-    <div class="sticker-grid">
-      @php $stickerIndex = 0; @endphp
-      @foreach ($items as $product)
-        @php
-          $barcode = $product->barcode ?: ($product->code ?: (string)$product->id);
-          $name = $product->name ?? '';
-          $price = number_format($product->selling_price ?? 0, 2);
-          $qty = max(1, $product->grn_quantity ?? 1);
-          $supplierCode = (isset($product->supplier->supplier_code) && trim($product->supplier->supplier_code) !== '')
-                          ? trim($product->supplier->supplier_code)
-                          : null;
-        @endphp
+    @php $stickerIndex = 0; @endphp
+    @foreach ($items as $product)
+      @php
+        $barcode = $product->barcode ?: ($product->code ?: (string)$product->id);
+        $name = $product->name ?? '';
+        $price = number_format($product->selling_price ?? 0, 2);
+        $qty = max(1, $product->grn_quantity ?? 1);
+        $supplierCode = (isset($product->supplier->supplier_code) && trim($product->supplier->supplier_code) !== '')
+                        ? trim($product->supplier->supplier_code)
+                        : null;
+      @endphp
 
-        @for ($i = 0; $i < $qty; $i++)
+      @for ($i = 0; $i < $qty; $i++)
+        @if ($stickerIndex % 3 === 0)<div class="sticker-row">@endif
         <div class="sticker">
           <div class="sticker-name" title="{{ $name }}">{{ $name }}</div>
-          <svg id="bc-{{ $stickerIndex++ }}" data-barcode="{{ $barcode }}"></svg>
+          <svg id="bc-{{ $stickerIndex }}" data-barcode="{{ $barcode }}"></svg>
           <div class="sticker-price">Rs. {{ $price }}</div>
           @if($supplierCode)<div class="sticker-supplier">{{ $supplierCode }}</div>@endif
         </div>
-        @endfor
-      @endforeach
-    </div>
+        @php $stickerIndex++; @endphp
+        @if ($stickerIndex % 3 === 0)</div>@endif
+      @endfor
+    @endforeach
+    @if ($stickerIndex % 3 !== 0)</div>@endif
   </div>
 
   <script>
